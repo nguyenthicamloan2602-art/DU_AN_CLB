@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <!-- Khai báo icon rỗng để tránh lỗi 404 -->
+  <link rel="shortcut icon" href="#">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HỆ THỐNG ĐOÀN THANH NIÊN - HỘI SINH VIÊN ĐẠI HỌC Y DƯỢC TPHCM</title>
+  
+  <!-- Tailwind CSS & FullCalendar CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+  <!-- CDN Tạo & Quét Mã QR -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <!-- FontAwesome Dynamic Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- CSS Tinh Chỉnh FullCalendar -->
+  <style>
+    .fc {
+      --fc-border-color: #f1f5f9 !important;
+      --fc-button-bg-color: #f8fafc !important;
+      --fc-button-border-color: #e2e8f0 !important;
+      --fc-button-text-color: #1e3a8a !important;
+      --fc-button-hover-bg-color: #f1f5f9 !important;
+      --fc-button-hover-border-color: #cbd5e1 !important;
+      --fc-button-active-bg-color: #0b4d8c !important;
+      --fc-button-active-border-color: #0b4d8c !important;
+      --fc-today-bg-color: #e0f2fe !important;
+      font-family: inherit !important;
+    }
+    .fc .fc-toolbar-title {
+      font-size: 0.95rem !important;
+      font-weight: 800 !important;
+      color: #1e293b !important;
+      text-transform: capitalize;
+    }
+    .fc .fc-button {
+      font-size: 0.75rem !important;
+      font-weight: 700 !important;
+      border-radius: 0.75rem !important;
+      padding: 0.35rem 0.75rem !important;
+      box-shadow: none !important;
+      transition: all 0.2s ease !important;
+    }
+    .fc .fc-col-header-cell-cushion {
+      font-size: 0.7rem !important;
+      font-weight: 700 !important;
+      color: #64748b !important;
+      text-transform: uppercase !important;
+      padding: 6px 0 !important;
+    }
+    .fc .fc-daygrid-day-number {
+      font-size: 0.75rem !important;
+      font-weight: 600 !important;
+      color: #475569 !important;
+      padding: 4px 6px !important;
+    }
+    .fc-event {
+      border: none !important;
+      border-radius: 0.5rem !important;
+      padding: 2px 6px !important;
+      margin-top: 2px !important;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+      cursor: pointer !important;
+      transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+    }
+    .fc-event:hover {
+      transform: translateY(-1px) scale(1.01);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+    }
+    .fc-event-title {
+      font-size: 0.7rem !important;
+      font-weight: 700 !important;
+      line-height: 1.2 !important;
+    }
+    .fc-timeGridWeek-button, .fc-dayGridMonth-button {
+      display: none !important;
+    }
+    /* Tự động co giãn khung quét QR Camera trên điện thoại */
+#qr-reader {
+  width: 100% !important;
+  border: none !important;
+}
+#qr-reader__scan_region {
+  width: 100% !important;
+  height: auto !important;
+}
+#qr-reader video {
+  width: 100% !important;
+  height: auto !important;
+  object-fit: cover !important;
+  border-radius: 0.75rem !important;
+}
+/* Co giãn lại nút bấm của khung quét QR */
+#qr-reader__dashboard_section_csr button {
+  background-color: #1e3a8a !important;
+  color: white !important;
+  border-radius: 0.5rem !important;
+  padding: 8px 12px !important;
+  border: none !important;
+  font-weight: bold !important;
+}
+  </style>
+</head>
+<body class="bg-slate-100/90 min-h-screen flex flex-col font-sans overflow-x-hidden text-slate-800">
+
+  <!-- HEADER CHÍNH -->
+  <header class="bg-gradient-to-r from-[#1e3a8a] via-[#1d4ed8] to-[#0284c7] text-white shadow-lg sticky top-0 z-40 w-full">
+    <div class="max-w-[1600px] mx-auto px-4 py-2.5 flex justify-between items-center gap-3">
+      
+      <div class="flex items-center space-x-3">
+        <button onclick="toggleSidebar()" class="text-white hover:bg-white/10 p-1.5 rounded-xl lg:hidden transition">☰</button>
+        <div class="w-9 h-9 bg-white text-[#1e3a8a] font-black rounded-2xl flex items-center justify-center text-xs shadow-md">UMP</div>
+        <div>
+          <h1 class="font-black text-xs md:text-sm leading-tight tracking-wide uppercase">ĐOÀN THANH NIÊN - HỘI SINH VIÊN</h1>
+          <p class="text-[10px] text-blue-100 hidden sm:block">ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH</p>
+        </div>
+      </div>
+
+      <div id="header-user-zone" class="hidden relative">
+        <button onclick="toggleUserMenu()" class="flex items-center gap-2 px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-2xl border border-white/30 shadow-sm cursor-pointer transition backdrop-blur-md">
+          <div class="w-7 h-7 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center text-xs font-black shadow-inner"><img src="link_anh_avatar.png" class="w-full h-full rounded-full object-cover"></div>
+          
+          <div class="flex items-center gap-1.5">
+            <span id="nav-user-name" class="text-xs font-extrabold">Tài khoản</span>
+            <span id="birthday-badge" class="hidden px-2 py-0.5 bg-amber-400 text-slate-900 rounded-full text-[10px] font-black animate-bounce shadow">
+              🎂 Sinh nhật vui vẻ!
+            </span>
+          </div>
+          <span class="text-[9px] text-blue-200">▼</span>
+        </button>
+
+        <div id="user-dropdown-menu" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-2xl border border-slate-100 p-1.5 z-50">
+          <button onclick="openProfileModal(); toggleUserMenu();" class="w-full text-left px-3 py-2 text-xs font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-900 rounded-xl transition">
+            📝 Cập nhật thông tin
+          </button>
+          <button onclick="openChangePassModal(); toggleUserMenu();" class="w-full text-left px-3 py-2 text-xs font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-900 rounded-xl transition">
+            🔑 Đổi mật khẩu
+          </button>
+          <hr class="my-1 border-slate-100">
+          <button onclick="logout()" class="w-full text-left px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition">
+            🚪 Đăng xuất
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <div class="flex-grow flex max-w-[1600px] w-full mx-auto">
+    
+    <!-- FORM ĐĂNG NHẬP -->
+    <div id="login-card" class="w-full max-w-md bg-white p-8 rounded-3xl shadow-2xl border border-slate-200 mx-auto my-auto mt-12">
+      <div class="text-center mb-6">
+        <h2 class="text-2xl font-black text-[#1e3a8a]">ĐĂNG NHẬP</h2>
+        <p class="text-xs text-slate-500 mt-1"> Vui lòng đăng nhập theo tài khoản được cấp </p>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Tên đăng nhập</label>
+          <input type="text" id="username" placeholder="Nhập tên đăng nhập..." class="w-full p-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Mật khẩu</label>
+          <input type="password" id="password" placeholder="Nhập mật khẩu..." class="w-full p-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <button onclick="handleLogin()" id="btn-login" class="w-full bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] hover:opacity-95 text-white font-bold py-2.5 rounded-xl shadow-md transition cursor-pointer">
+          Đăng Nhập
+        </button>
+        <p id="login-msg" class="text-center text-xs font-semibold mt-2 min-h-[18px]"></p>
+      </div>
+    </div>
+
+    <!-- DASHBOARD CHÍNH -->
+    <div id="dashboard" class="hidden w-full flex flex-col lg:flex-row">
+
+      <!-- SIDEBAR -->
+      <aside id="main-sidebar" class="hidden lg:block w-full lg:w-64 bg-white text-slate-700 flex-shrink-0 border-r border-slate-200/80 min-h-[calc(100vh-52px)] shadow-sm">
+        <div class="px-4 py-3.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 border-b border-slate-100 flex justify-between items-center">
+          <span>DANH MỤC QUẢN LÝ</span>
+          <span class="text-[9px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold">2026</span>
+        </div>
+
+        <nav class="p-3 space-y-1.5 text-xs">
+          <!-- DANH MỤC 1: QUẢN LÝ VẬT PHẨM -->
+          <div class="rounded-xl overflow-hidden">
+            <button onclick="toggleSubMenu('menu-vat-pham')" class="w-full text-left px-3 py-2.5 font-bold text-slate-700 flex justify-between items-center hover:bg-slate-50 rounded-xl transition">
+              <span class="flex items-center gap-2">📦 QUẢN LÝ VẬT PHẨM</span><span class="text-[9px] text-slate-400">▼</span>
+            </button>
+            <div id="menu-vat-pham" class="pl-3 pr-1 py-1 space-y-0.5 border-l-2 border-slate-200 ml-3 my-1">
+              <button onclick="switchTab('pos')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Đăng ký vật phẩm </button>
+              <button onclick="switchTab('history')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Lịch sử đơn </button>
+              <button onclick="switchTab('admin')" id="sbtn-admin" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 font-bold transition">• Cập nhật trạng thái </button>
+            </div>
+          </div>
+
+          <!-- DANH MỤC 2: CƠ SỞ VẬT CHẤT -->
+          <div id="grp-menu-csvc" class="hidden rounded-xl overflow-hidden">
+            <button onclick="toggleSubMenu('menu-csvc')" class="w-full text-left px-3 py-2.5 font-bold text-slate-700 flex justify-between items-center hover:bg-slate-50 rounded-xl transition">
+              <span class="flex items-center gap-2">🏢 QUẢN LÝ CƠ SỞ VẬT CHẤT</span><span class="text-[9px] text-slate-400">▼</span>
+            </button>
+            <div id="menu-csvc" class="pl-3 pr-1 py-1 space-y-0.5 border-l-2 border-slate-200 ml-3 my-1">
+              <button onclick="switchTab('csvc_dangky')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Đăng ký Giảng đường/Địa điểm</button>
+              <button onclick="switchTab('csvc_xinxe')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Xin xe ra/vào</button>
+              <button onclick="switchTab('csvc_duyet')" id="sbtn-csvc-duyet" class="hidden w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 font-bold transition">• Duyệt Đơn CSVC</button>
+              <button onclick="switchTab('csvc_history')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Lịch sử đăng ký </button>
+            </div>
+          </div>
+
+          <!-- DANH MỤC 3: HOẠT ĐỘNG & CTV -->
+          <div id="grp-menu-ctv" class="rounded-xl overflow-hidden">
+            <button onclick="toggleSubMenu('menu-hoat-dong')" class="w-full text-left px-3 py-2.5 font-bold text-slate-700 flex justify-between items-center hover:bg-slate-50 rounded-xl transition">
+              <span class="flex items-center gap-2">👥 QUẢN LÝ CỘNG TÁC VIÊN</span><span class="text-[9px] text-slate-400">▼</span>
+            </button>
+            <div id="menu-hoat-dong" class="pl-3 pr-1 py-1 space-y-0.5 border-l-2 border-slate-200 ml-3 my-1">
+              <button onclick="switchCtvSub('ctv-subtab-schedule')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Đăng ký lịch trực</button>
+              <button onclick="switchCtvSub('ctv-subtab-checkin')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Điểm danh</button>
+              <button onclick="switchCtvSub('ctv-subtab-events')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Đăng ký hoạt động</button>
+              <button id="sbtn-ctv-progress" onclick="switchCtvSub('ctv-subtab-progress')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Đánh giá tiêu chí</button>
+              <button id="sbtn-ctv-admin" onclick="switchCtvSub('ctv-subtab-admin')" class="hidden w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 font-bold transition">• Xếp loại CTV</button>
+            </div>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- MAIN VIEWS -->
+      <main class="flex-grow p-4 md:p-6 min-w-0">
+        
+        <!-- MODULE 1: QUẢN LÝ VẬT PHẨM -->
+        <div id="view-pos" class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <div class="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 flex flex-col">
+            <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+              <div>
+                <h2 class="text-sm font-bold text-slate-800">📅 LỊCH ĐĂNG KÝ VẬT PHẨM</h2>
+                <p class="text-[11px] text-slate-400">Lịch sẽ được cập nhật sau khi đăng ký thành công. Bấm 🔄 Tải Lại để cập nhật lại lịch.</p>
+              </div>
+              <button onclick="renderCalendarEvents()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">🔄 Tải Lại</button>
+            </div>
+            <div id="calendar-container" class="flex-grow min-h-[500px]"></div>
+          </div>
+
+          <div class="lg:col-span-5 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-3 gap-2">
+                <h3 class="font-extrabold text-xs text-slate-800 uppercase tracking-tight whitespace-nowrap">📋 PHIẾU ĐĂNG KÝ MƯỢN VẬT PHẨM </h3>
+                <button onclick="clearCart()" class="text-[11px] font-semibold text-rose-500 hover:bg-rose-50 px-2 py-0.5 rounded-lg transition">Xóa đã chọn</button>
+              </div>
+
+              <div class="space-y-2 bg-slate-50 p-3.5 rounded-xl border border-slate-200/60 mb-3">
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Email đơn vị *</label>
+                  <input type="email" id="borrow-email" placeholder="Nhập email đơn vị..." class="w-full p-2 border rounded-lg text-xs bg-white outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Người đại diện *</label>
+                    <input type="text" id="borrow-name" placeholder="Họ và tên..." class="w-full p-2 border rounded-lg text-xs bg-white outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Số điện thoại *</label>
+                    <input type="tel" id="borrow-phone" placeholder="Số điện thoại..." class="w-full p-2 border rounded-lg text-xs bg-white outline-none">
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Dự kiến mượn *</label>
+                    <input type="datetime-local" id="borrow-start" onchange="loadInventoryItems()" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Dự kiến trả *</label>
+                    <input type="datetime-local" id="borrow-end" onchange="loadInventoryItems()" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Tên chương trình/hoạt động *</label>
+                  <input type="text" id="borrow-note" placeholder="Nhập mục đích sử dụng vật phẩm..." class="w-full p-2 border rounded-lg text-xs bg-white outline-none">
+                </div>
+              </div>
+
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-[11px] font-extrabold text-slate-700">📦 DANH SÁCH VẬT PHẨM *</span>
+                <input type="text" id="search-item" onkeyup="filterInventory()" placeholder="🔍 Tìm..." class="p-1 px-2 border rounded-lg text-xs w-28">
+              </div>
+              <div id="inventory-list" class="grid grid-cols-2 gap-2 overflow-y-auto max-h-[200px] pr-1"></div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 mt-3">
+              <button onclick="submitBorrowOrder()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-700 hover:opacity-95 text-white font-bold py-2.5 rounded-xl shadow-sm text-xs uppercase transition cursor-pointer">🚀 GỬI PHIẾU ĐĂNG KÝ</button>
+              <p id="borrow-msg" class="text-center text-xs font-bold mt-1 min-h-[16px]"></p>
+            </div>
+          </div>
+        </div>
+
+        <div id="view-history" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5">
+          <h2 class="font-bold text-slate-800 text-sm mb-3">📜 LỊCH SỬ ĐƠN MƯỢN</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead><tr class="bg-slate-50 font-bold border-b"><th class="p-2.5">Mã Đơn</th><th class="p-2.5">Vật Phẩm</th><th class="p-2.5">Thời Gian</th><th class="p-2.5">Người mượn</th><th class="p-2.5">Trạng Thái</th></tr></thead>
+              <tbody id="user-history-table"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="view-admin" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5">
+          <h2 class="font-bold text-slate-800 text-sm mb-3">📦 TRẠNG THÁI GIAO VÀ NHẬN VẬT PHẨM</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead><tr class="bg-slate-50 font-bold border-b"><th class="p-2.5">Mã Đơn</th><th class="p-2.5">Đơn Vị</th><th class="p-2.5">Người mượn</th><th class="p-2.5">Vật Phẩm</th><th class="p-2.5">Thời Gian</th><th class="p-2.5">Trạng Thái</th><th class="p-2.5 text-center">Thao Tác</th></tr></thead>
+              <tbody id="admin-orders-table"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- MODULE 2: CƠ SỞ VẬT CHẤT -->
+        <div id="view-csvc-location" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <div class="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 flex flex-col">
+            <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+              <div>
+                <h2 class="text-sm font-bold text-slate-800">📅 LỊCH SỬ DỤNG GIẢNG ĐƯỜNG & ĐỊA ĐIỂM</h2>
+                <p class="text-[11px] text-slate-400">Lịch sẽ được cập nhật sau khi đăng ký thành công. Bấm 🔄 Tải Lại để cập nhật lại lịch.</p>
+              </div>
+              <button onclick="renderCsvcCalendarEvents()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">🔄 Tải Lại</button>
+            </div>
+            <div id="csvc-calendar-container" class="flex-grow min-h-[500px]"></div>
+          </div>
+
+          <div class="lg:col-span-5 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 border-b border-slate-100 pb-2 mb-3">
+                <h3 class="font-extrabold text-xs text-slate-800 uppercase">📝 PHIẾU ĐĂNG KÝ GIẢNG ĐƯỜNG & ĐỊA ĐIỂM</h3>
+              </div>
+
+              <div class="space-y-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Giảng đường / Địa điểm *</label>
+                  <select id="csvc-loc-select" class="w-full p-2 border rounded-lg text-xs bg-white outline-none font-semibold text-slate-800">
+                    <option value="">-- Chọn giảng đường / địa điểm mượn --</option>
+                    <optgroup label="🏢 1. PHÒNG HCTH CẤP">
+                      <option value="Phòng Hội thảo">Phòng Hội thảo</option>
+                      <option value="Phòng Hội đồng">Phòng Hội đồng</option>
+                      <option value="Đại giảng đường">Đại giảng đường</option>
+                      <option value="Phòng họp lầu 1">Phòng họp lầu 1</option>
+                      <option value="Phòng họp lầu 14">Phòng họp lầu 14</option>
+                      <option value="Giảng đường 3D">Giảng đường 3D</option>
+                    </optgroup>
+                    <optgroup label="🏫 2. TRƯỜNG Y CẤP">
+                      <option value="Giảng đường 3C">Giảng đường 3C</option>
+                      <option value="Giảng đường 9A1">Giảng đường 9A1</option>
+                      <option value="Giảng đường 9A2">Giảng đường 9A2</option>
+                      <option value="Giảng đường 9C">Giảng đường 9C</option>
+                    </optgroup>
+                    <optgroup label="🏤 3. ĐOÀN THANH NIÊN CẤP">
+                      <option value="Giảng đường 4A1">Giảng đường 4A1</option>
+                      <option value="Giảng đường 4A2">Giảng đường 4A2</option>
+                      <option value="Giảng đường 4B1">Giảng đường 4B1</option>
+                      <option value="Giảng đường 4B2">Giảng đường 4B2</option>
+                      <option value="Giảng đường 5A1">Giảng đường 5A1</option>
+                      <option value="Giảng đường 5A2">Giảng đường 5A2</option>
+                      <option value="Giảng đường 5B1">Giảng đường 5B1</option>
+                      <option value="Giảng đường 5B2">Giảng đường 5B2</option>
+                      <option value="Giảng đường 4C">Giảng đường 4C</option>
+                      <option value="Giảng đường 4D">Giảng đường 4D</option>
+                      <option value="Giảng đường 5C">Giảng đường 5C</option>
+                      <option value="Giảng đường 5D">Giảng đường 5D</option>
+                      <option value="Giảng đường 6A">Giảng đường 6A</option>
+                      <option value="Giảng đường 6B">Giảng đường 6B</option>
+                      <option value="Giảng đường 6C">Giảng đường 6C</option>
+                      <option value="Giảng đường 6D">Giảng đường 6D</option>
+                      <option value="Giảng đường 7A">Giảng đường 7A</option>
+                      <option value="Giảng đường 7B">Giảng đường 7B</option>
+                      <option value="Giảng đường 7C">Giảng đường 7C</option>
+                      <option value="Giảng đường 7D">Giảng đường 7D</option>
+                    </optgroup>
+                    </optgroup>
+                    <optgroup label="📍 4. ĐỊA ĐIỂM">
+                      <option value="Sân đa năng">Sân đa năng</option>
+                      <option value="Sảnh tòa nhà 15 tầng">Sảnh tòa nhà 15 tầng</option>
+                      <option value="Sảnh tòa nhà A-C">Sảnh tòa nhà A-C</option>
+                    </optgroup>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Email đơn vị *</label>
+                  <input type="email" id="csvc-loc-email" placeholder="Nhập email..." class="w-full p-2 border rounded-lg text-xs bg-white outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Người đại diện *</label>
+                    <input type="text" id="csvc-loc-name" placeholder="Họ và tên..." class="w-full p-2 border rounded-lg text-xs bg-white outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Số điện thoại *</label>
+                    <input type="tel" id="csvc-loc-phone" placeholder="Số điện thoại..." class="w-full p-2 border rounded-lg text-xs bg-white outline-none">
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Thời gian bắt đầu *</label>
+                    <!-- Đã đổi ID tránh trùng lặp -->
+                    <input type="datetime-local" id="csvc-borrow-start" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Thời gian kết thúc *</label>
+                    <!-- Đã đổi ID tránh trùng lặp -->
+                    <input type="datetime-local" id="csvc-borrow-end" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Nội dung hoạt động *</label>
+                  <textarea id="csvc-loc-reason" rows="2" placeholder="Nội dung mượn..." class="w-full p-2 border rounded-lg text-xs bg-white outline-none"></textarea>
+                </div>
+
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link văn bản *</label>
+                  <input type="url" id="csvc-loc-file" placeholder="https://drive.google.com/..." class="w-full p-2 border rounded-lg text-xs bg-white outline-none">
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 mt-3">
+              <button onclick="submitCsvcLocationOrder()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-700 hover:opacity-95 text-white font-bold py-2.5 rounded-xl shadow-sm text-xs uppercase transition cursor-pointer">🚀 GỬI PHIẾU ĐĂNG KÝ CSVC</button>
+              <p id="csvc-loc-msg" class="text-center text-xs font-bold mt-1 min-h-[16px]"></p>
+            </div>
+          </div>
+        </div>
+
+        <div id="view-csvc-vehicle" class="hidden max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6">
+          <div class="flex items-center gap-2 border-b border-slate-100 pb-3 mb-4">
+            <h3 class="font-extrabold text-sm text-slate-800 uppercase">🚚 ĐĂNG KÝ XIN XE RA/VÀO TRƯỜNG</h3>
+          </div>
+
+          <div class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200/60 mb-4">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Email đơn vị *</label>
+              <input type="email" id="veh-email" placeholder="Nhập email..." class="w-full p-2 border rounded-lg text-xs bg-white outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Người đại diện *</label>
+                <input type="text" id="veh-name" placeholder="Họ tên..." class="w-full p-2 border rounded-lg text-xs bg-white outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Số điện thoại *</label>
+                <input type="tel" id="veh-phone" placeholder="Số điện thoại..." class="w-full p-2 border rounded-lg text-xs bg-white outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Loại xe *</label>
+              <input type="text" id="veh-cartype" placeholder="Xe tải 500kg..." class="w-full p-2 border rounded-lg text-xs bg-white outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Thời gian vào *</label>
+                <input type="datetime-local" id="veh-start" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Thời gian ra *</label>
+                <input type="datetime-local" id="veh-end" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Tên chương trình/hoạt động *</label>
+              <textarea id="veh-reason" rows="2" placeholder="Chiến dịch Blouse trắng tình nguyện Mùa hè xanh năm 2026" class="w-full p-2 border rounded-lg text-xs bg-white outline-none"></textarea>
+            </div>
+          </div>
+
+          <button onclick="submitCsvcVehicleOrder()" class="w-full bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] hover:opacity-95 text-white font-bold py-2.5 rounded-xl shadow-sm text-xs uppercase transition cursor-pointer">🚀 GỬI PHIẾU XIN XE</button>
+        </div>
+
+        <div id="view-csvc-duyet" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5">
+          <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+            <h2 class="text-sm font-extrabold text-slate-800">👑 BÀN DUYỆT ĐƠN CƠ SỞ VẬT CHẤT (QTV)</h2>
+            <button onclick="loadPendingCsvcOrders()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition">🔄 Tải Đơn Mới</button>
+          </div>
+
+          <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full text-left border-collapse min-w-[850px]">
+              <thead>
+                <tr class="bg-slate-50 text-slate-700 font-extrabold text-xs border-b">
+                  <th class="p-3">MÃ ĐƠN</th><th class="p-3">ĐƠN VỊ</th><th class="p-3">NGƯỜI MƯỢN</th><th class="p-3">NỘI DUNG</th><th class="p-3">THỜI GIAN</th><th class="p-3">TRẠNG THÁI</th><th class="p-3 text-center">THAO TÁC</th>
+                </tr>
+              </thead>
+              <tbody id="csvc-pending-table"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="view-csvc-history" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5">
+          <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+            <h2 class="text-sm font-extrabold text-slate-800">📜 LỊCH SỬ ĐĂNG KÝ </h2>
+            <button onclick="loadAllCsvcHistory()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition">🔄 Tải Lại</button>
+          </div>
+
+          <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full text-left border-collapse min-w-[850px]">
+              <thead>
+                <tr class="bg-slate-50 text-slate-700 font-extrabold text-xs border-b">
+                  <th class="p-3">Mã Đơn</th><th class="p-3">Đơn Vị</th><th class="p-3">Người đại diện</th><th class="p-3">Nội Dung</th><th class="p-3">Thời Gian</th><th class="p-3">Trạng Thái</th>
+                </tr>
+              </thead>
+              <tbody id="csvc-history-table"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- MODULE 3: CỘNG TÁC VIÊN (CTV) & QUẢN TRỊ VIÊN (QTV) -->
+        <div id="module-ctv" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5">
+          
+          <!-- SUBTAB 3.1: LỊCH TRỰC TUẦN -->
+          <div id="ctv-subtab-schedule" class="space-y-6">
+            <div class="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/60">
+              <h3 class="text-xs font-extrabold text-slate-800 uppercase mb-3 flex items-center gap-2">
+                📋 ĐĂNG KÝ LỊCH TRỰC THEO TUẦN
+              </h3>
+              <div id="scheduleContainer" class="overflow-x-auto min-h-[300px]"></div>
+            </div>
+          </div>
+
+          <!-- SUBTAB 3.2: CHƯƠNG TRÌNH & SỰ KIỆN -->
+          <div id="ctv-subtab-events" class="hidden">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-xs font-extrabold text-slate-800 uppercase">🎉 DANH SÁCH CHƯƠNG TRÌNH ĐANG MỞ ĐĂNG KÝ</h3>
+              <button id="btn-qtv-add-program" onclick="openCreateProgramModal()" class="hidden px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-bold rounded-xl text-xs shadow-md transition cursor-pointer flex items-center gap-1.5">
+                ➕ Tạo Chương Trình Mới
+              </button>
+            </div>
+            <div id="ctv-events-list"></div>
+          </div>
+
+          <div id="ctv-subtab-checkin" class="hidden">
+
+  <!-- 1. GIAO DIỆN QUÉT QR DÀNH CHO CTV (GIỮ NGUYÊN CODE CỦA BẠN) -->
+  <div id="ctv-scanner-container">
+    <div id="box-ctv-scan" class="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 text-center max-w-xl mx-auto space-y-4">
+      <h4 class="font-bold text-xs text-slate-800 uppercase">📷 QUÉT MÃ QR ĐIỂM DANH CA TRỰC</h4>
+      <p class="text-[11px] text-slate-500">Chọn loại điểm danh và hướng Camera vào Mã QR tại Văn phòng.</p>
+
+      <!-- Nút chọn VÀO CA / RA CA -->
+      <div class="flex justify-center gap-3 my-2">
+        <label class="flex items-center gap-1.5 px-4 py-2 bg-white rounded-xl border border-blue-200 cursor-pointer shadow-sm">
+          <input type="radio" name="checkin_type" value="IN" checked class="w-4 h-4 text-blue-600">
+          <span class="text-xs font-bold text-blue-900">🟢 VÀO CA (Check-in)</span>
+        </label>
+        <label class="flex items-center gap-1.5 px-4 py-2 bg-white rounded-xl border border-amber-200 cursor-pointer shadow-sm">
+          <input type="radio" name="checkin_type" value="OUT" class="w-4 h-4 text-amber-600">
+          <span class="text-xs font-bold text-amber-900">🔴 RA CA (Check-out)</span>
+        </label>
+      </div>
+
+      <div id="qr-reader" class="w-full max-w-xs mx-auto bg-white rounded-xl overflow-hidden border"></div>
+
+      <div id="checkin-result-msg" class="hidden p-3 rounded-xl text-xs font-bold"></div>
+
+      <button onclick="startScanner()" class="px-6 py-2.5 bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] hover:opacity-95 text-white font-bold rounded-xl text-xs uppercase shadow transition cursor-pointer">
+        Bật Camera Quét
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. GIAO DIỆN BẢNG THEO DÕI DÀNH CHO QTV (TỰ ĐỘNG HIỆN KHI QTV ĐĂNG NHẬP) -->
+  <div id="qtv-checkin-log-container" class="hidden max-w-4xl mx-auto">
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
+      
+      <!-- HEADER & BỘ LỌC NGÀY -->
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-100">
+        <div>
+          <h2 class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+            <span>📋</span> NHẬT KÝ ĐIỂM DANH TRONG NGÀY
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">Danh sách CTV Check-in / Check-out thành công</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input type="date" id="qtv-filter-date" class="px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="loadQtvCheckinLogs()">
+          <button onclick="loadQtvCheckinLogs()" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition cursor-pointer">
+            🔄 Tải lại
+          </button>
+        </div>
+      </div>
+
+      <!-- BẢNG THỐNG KÊ MÓN -->
+      <div class="grid grid-cols-3 gap-3 mb-4">
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+          <span class="text-[10px] font-bold text-slate-500 uppercase">Tổng lượt</span>
+          <p id="stat-total-checkin" class="text-base font-black text-slate-800">0</p>
+        </div>
+        <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 text-center">
+          <span class="text-[10px] font-bold text-emerald-700 uppercase">Vào ca (IN)</span>
+          <p id="stat-in-checkin" class="text-base font-black text-emerald-700">0</p>
+        </div>
+        <div class="bg-rose-50 p-3 rounded-xl border border-rose-100 text-center">
+          <span class="text-[10px] font-bold text-rose-700 uppercase">Ra ca (OUT)</span>
+          <p id="stat-out-checkin" class="text-base font-black text-rose-700">0</p>
+        </div>
+      </div>
+
+      <!-- BẢNG HIỂN THỊ DỮ LIỆU -->
+      <div class="overflow-x-auto rounded-xl border border-slate-200">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-blue-50/80 text-blue-900 font-extrabold border-b border-slate-200">
+              <th class="p-3">Giờ</th>
+              <th class="p-3">Tài khoản CTV</th>
+              <th class="p-3">Trạng thái</th>
+              <th class="p-3">Thiết bị (Device ID)</th>
+              <th class="p-3">Ghi chú / Cảnh báo</th>
+            </tr>
+          </thead>
+          <tbody id="qtv-checkin-table-body">
+            <tr>
+              <td colspan="5" class="p-5 text-center text-slate-400">Đang tải dữ liệu điểm danh...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+          <!-- SUBTAB 3.4: TIẾN ĐỘ & XẾP LOẠI (DÀNH CHO CTV) -->
+          <div id="ctv-subtab-progress" class="hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 flex items-center gap-6">
+                <div class="relative w-28 h-28 flex-shrink-0">
+                  <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <path class="text-slate-200" stroke-width="3.8" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path id="ctv-shift-circle" class="text-blue-600 transition-all duration-700" stroke-dasharray="0, 100" stroke-width="3.8" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  </svg>
+                  <div class="absolute inset-0 flex items-center justify-center text-xs font-black text-slate-800" id="ctv-shift-percent">0%</div>
+                </div>
+                <div>
+                  <h4 class="font-extrabold text-xs text-slate-500 uppercase">TIẾN ĐỘ CA TRỰC</h4>
+                  <p class="text-lg font-black text-slate-800 my-1" id="ctv-shift-count">0/10 ca</p>
+                  <span class="text-[10px] text-slate-400">Chỉ tiêu hoàn thành ca trực</span>
+                </div>
+              </div>
+
+              <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 flex items-center gap-6">
+                <div class="relative w-28 h-28 flex-shrink-0">
+                  <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <path class="text-slate-200" stroke-width="3.8" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path id="ctv-event-circle" class="text-teal-600 transition-all duration-700" stroke-dasharray="0, 100" stroke-width="3.8" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  </svg>
+                  <div class="absolute inset-0 flex items-center justify-center text-xs font-black text-slate-800" id="ctv-event-percent">0%</div>
+                </div>
+                <div>
+                  <h4 class="font-extrabold text-xs text-slate-500 uppercase">THAM GIA SỰ KIỆN</h4>
+                  <p class="text-lg font-black text-slate-800 my-1" id="ctv-event-count">0/5 sự kiện</p>
+                  <span class="text-[10px] text-slate-400">Chỉ tiêu tham gia chương trình</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 grid grid-cols-2 gap-4 text-center">
+              <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">XẾP LOẠI ĐỀ XUẤT</span>
+                <p class="text-sm font-black text-blue-900 mt-1" id="ctv-rank-proposed">Trung bình</p>
+              </div>
+              <div class="p-3.5 bg-emerald-50/60 rounded-xl border border-emerald-200/60">
+                <span class="text-[10px] font-bold text-emerald-700 uppercase">XẾP LOẠI CHÍNH THỨC</span>
+                <p class="text-sm font-black text-emerald-900 mt-1" id="ctv-rank-official">Chờ duyệt</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUBTAB 3.5: BÀN DUYỆT XẾP LOẠI CTV (DÀNH CHO QTV) -->
+          <div id="ctv-subtab-admin" class="hidden space-y-4">
+            <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+              <h3 class="text-xs font-extrabold text-slate-800 uppercase">👑 QUẢN LÝ & BÀN DUYỆT XẾP LOẠI CỘNG TÁC VIÊN</h3>
+              <button onclick="loadAdminRankTable()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer">🔄 Tải Lại Dữ Liệu</button>
+            </div>
+            <div id="ctv-admin-rank-table"></div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- FOOTER CHÍNH THỨC -->
+  <footer class="w-full bg-slate-100/90 border-t border-slate-200/60 py-3 mt-auto">
+    <div class="max-w-[1600px] mx-auto px-4 text-center">
+      <p class="text-xs font-bold text-slate-700 tracking-wide uppercase">
+        © 2026 VĂN PHÒNG ĐOÀN THANH NIÊN - HỘI SINH VIÊN ĐẠI HỌC Y DƯỢC TP. HỒ CHÍ MINH
+      </p>
+      <p class="text-[11px] italic text-slate-400 mt-0.5">
+        The website was developed by NTCL team
+      </p>
+    </div>
+  </footer>
+
+  <!-- MODALS POPUP -->
+  <div id="modal-ctv-profile" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-3xl shadow-2xl max-w-lg w-full space-y-4 border border-slate-100 relative max-h-[90vh] overflow-y-auto">
+      <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+      <div class="border-b pb-3">
+        <h3 class="font-extrabold text-slate-800 text-sm uppercase">📝 THÔNG TIN</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Vui lòng cập nhật đầy đủ thông tin!</p>
+      </div>
+      <form onsubmit="submitCtvProfile(event)" class="space-y-3 text-xs">
+        <div><label class="block font-bold text-slate-700 mb-1">Họ và tên *</label><input type="text" id="prof-fullname" required placeholder="Nguyễn Văn A" class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block font-bold text-slate-700 mb-1">Mã số sinh viên *</label><input type="text" id="prof-mssv" required placeholder="SV2026..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></div>
+          <div><label class="block font-bold text-slate-700 mb-1">Ngày sinh *</label><input type="date" id="prof-dob" required class="w-full p-2.5 border rounded-xl bg-slate-50 font-bold outline-none"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block font-bold text-slate-700 mb-1">Trường/Khoa *</label><input type="text" id="prof-school" placeholder="ĐH Y Dược TP.HCM" class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></div>
+          <div><label class="block font-bold text-slate-700 mb-1">Lớp *</label><input type="text" id="prof-class" placeholder="Y2023..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block font-bold text-slate-700 mb-1">Số điện thoại *</label><input type="tel" id="prof-phone" required class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></div>
+          <div><label class="block font-bold text-slate-700 mb-1">Thông tin người thân (SĐT) *</label><input type="text" id="prof-relative" placeholder="Phụ huynh: 090..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></div>
+        </div>
+        <div><label class="block font-bold text-slate-700 mb-1">Địa chỉ *</label><input type="text" id="prof-address" placeholder="Nhập địa chỉ chi tiết..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></div>
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="closeProfileModal()" class="w-1/2 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl">Hủy</button>
+          <button type="submit" class="w-1/2 py-2.5 bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] text-white font-bold rounded-xl shadow">Lưu Hồ Sơ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-change-pass" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-3xl shadow-2xl max-w-sm w-full space-y-4 border border-slate-100 relative">
+      <button onclick="closeChangePassModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+      <div class="border-b pb-2"><h3 class="font-extrabold text-slate-800 text-sm uppercase">🔑 ĐỔI MẬT KHẨU TÀI KHOẢN</h3></div>
+      <form onsubmit="submitChangePassword(event)" class="space-y-3 text-xs">
+        <div><label class="block font-bold text-slate-700 mb-1">Mật khẩu cũ *</label><input type="password" id="pass-old" required class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></div>
+        <div><label class="block font-bold text-slate-700 mb-1">Mật khẩu mới *</label><input type="password" id="pass-new" required class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></div>
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="closeChangePassModal()" class="w-1/2 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl">Hủy</button>
+          <button type="submit" class="w-1/2 py-2.5 bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] text-white font-bold rounded-xl shadow">Xác Nhận</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-ctv-list" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-6 relative max-h-[85vh] flex flex-col border border-slate-100">
+      <button onclick="closeCtvListModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+      <div class="border-b border-slate-100 pb-3 mb-3">
+        <h3 class="text-sm font-extrabold text-slate-800 uppercase" id="modal-ctv-list-title">📋 Danh Sách CTV Đăng Ký</h3>
+      </div>
+      <div class="overflow-y-auto flex-1 rounded-2xl border border-slate-200">
+        <table class="min-w-full divide-y divide-slate-200 text-xs">
+          <thead class="bg-slate-50 sticky top-0">
+            <tr>
+              <th class="px-3 py-2.5 text-left font-bold text-slate-700">STT</th>
+              <th class="px-3 py-2.5 text-left font-bold text-slate-700">Họ và Tên</th>
+              <th class="px-3 py-2.5 text-left font-bold text-slate-700">Vị trí</th>
+              <th class="px-3 py-2.5 text-left font-bold text-slate-700">Ghi chú</th>
+              <th class="px-3 py-2.5 text-left font-bold text-slate-700">Thời gian</th>
+            </tr>
+          </thead>
+          <tbody id="ctv-list-table-body" class="divide-y divide-slate-100 bg-white"></tbody>
+        </table>
+      </div>
+      <div class="pt-3 text-right">
+        <button onclick="closeCtvListModal()" class="px-4 py-2 bg-slate-200 text-slate-700 font-bold rounded-xl text-xs cursor-pointer">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-program-register" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-3xl shadow-2xl max-w-md w-full space-y-4 border border-slate-100 relative">
+      <button onclick="closeProgramRegisterModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+      <div class="border-b pb-3">
+        <h3 class="font-extrabold text-slate-800 text-sm uppercase">🎯 ĐĂNG KÝ VỊ TRÍ THAM GIA</h3>
+        <p id="modal-program-title" class="text-xs text-[#1e3a8a] font-extrabold mt-1">⏳ Đang tải tên...</p>
+      </div>
+      <form id="form-program-register" onsubmit="submitProgramRegistration(event)">
+        <input type="hidden" id="reg-program-id"><input type="hidden" id="reg-program-name">
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Chọn vị trí mong muốn <span class="text-rose-500">*</span></label>
+            <select id="reg-program-position" class="w-full p-2.5 border rounded-xl bg-slate-50 font-semibold text-slate-800 outline-none" required><option value="">-- Chọn vị trí --</option></select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Ghi chú / Kỹ năng sở trường</label>
+            <textarea id="reg-program-note" rows="3" placeholder="Nhập kinh nghiệm hoặc thông tin ghi chú..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></textarea>
+          </div>
+          <div class="pt-2 flex gap-2">
+            <button type="button" onclick="closeProgramRegisterModal()" class="w-1/2 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl">Hủy</button>
+            <button type="submit" id="btn-submit-program" class="w-1/2 py-2.5 bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] text-white font-bold rounded-xl shadow cursor-pointer">Xác Nhận Đăng Ký</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-create-program" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-3xl shadow-2xl max-w-lg w-full space-y-4 border border-slate-100 relative max-h-[90vh] overflow-y-auto">
+      <button onclick="closeCreateProgramModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+      <div class="border-b pb-3">
+        <h3 class="font-extrabold text-slate-800 text-sm uppercase">➕ TẠO CHƯƠNG TRÌNH / TUYỂN CTV MỚI</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Tự động lưu dữ liệu vào tab ChuongTrinh_Recruit trên Google Sheet</p>
+      </div>
+      <form onsubmit="submitCreateProgram(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Mã chương trình *</label>
+          <input type="text" id="prog-id" required placeholder="CT_SUMMER_2026..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Tên chương trình *</label>
+          <input type="text" id="prog-name" required placeholder="Tập huấn Kỹ năng Mùa Hè Xanh..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Mô tả nội dung chương trình *</label>
+          <textarea id="prog-desc" rows="2" required placeholder="Mô tả công việc và hoạt động..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Trạng thái *</label>
+            <select id="prog-status" class="w-full p-2.5 border rounded-xl bg-slate-50 font-bold outline-none">
+              <option value="OPEN" selected>OPEN (Mở đăng ký)</option>
+              <option value="CLOSED">CLOSED (Đóng đăng ký)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Hạn đăng ký *</label>
+            <input type="date" id="prog-deadline" required class="w-full p-2.5 border rounded-xl bg-slate-50 font-bold outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Chỉ tiêu vị trí / Ban tuyển dụng *</label>
+          <input type="text" id="prog-positions" required placeholder="Ví dụ: Ban Hậu Cần (5), Ban Truyền Thông (3), Đội Lễ Tân (2)" class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none">
+        </div>
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="closeCreateProgramModal()" class="w-1/2 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl">Hủy</button>
+          <button type="submit" id="btn-submit-create-prog" class="w-1/2 py-2.5 bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] text-white font-bold rounded-xl shadow">Xác Nhận Tạo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="adminModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 border border-slate-100 relative">
+      <button onclick="document.getElementById('adminModal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+      <div id="modalContent" class="space-y-3"></div>
+      <div class="pt-4 border-t border-slate-100 mt-4 flex justify-end">
+        <button onclick="document.getElementById('adminModal').classList.add('hidden')" class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT HỆ THỐNG KẾT NỐI -->
+  <script src="./config.js"></script>
+  <script src="./auth.js"></script>
+  <script src="./inventory.js"></script>
+  <script src="./csvc.js"></script>
+  <script src="ctv.js?v=999"></script>
+
+  <script>
+    function toggleUserMenu() { document.getElementById("user-dropdown-menu")?.classList.toggle("hidden"); }
+    function toggleSidebar() { document.getElementById("main-sidebar")?.classList.toggle("hidden"); }
+    function toggleSubMenu(id) { document.getElementById(id)?.classList.toggle("hidden"); }
+
+    function openProfileModal() { document.getElementById("modal-ctv-profile")?.classList.remove("hidden"); }
+    function closeProfileModal() { document.getElementById("modal-ctv-profile")?.classList.add("hidden"); }
+    function openChangePassModal() { document.getElementById("modal-change-pass")?.classList.remove("hidden"); }
+    function closeChangePassModal() { document.getElementById("modal-change-pass")?.classList.add("hidden"); }
+
+    function checkBirthdayStatus(dobString) {
+      if (!dobString) return;
+      const today = new Date();
+      const dob = new Date(dobString);
+      if (today.getDate() === dob.getDate() && today.getMonth() === dob.getMonth()) {
+        document.getElementById("birthday-badge")?.classList.remove("hidden");
+      }
+    }
+
+    function switchCtvSub(subName) {
+      switchTab('ctv_module');
+      if (typeof switchCtvSubTab === "function") {
+        switchCtvSubTab(subName);
+      } else if (typeof switchCtvTab === "function") {
+        switchCtvTab(subName);
+      } else if (typeof showCtvSubTab === "function") {
+        showCtvSubTab(subName);
+      }
+    }
+    window.switchCtvSub = switchCtvSub;
+
+    function applyUserRolePermissions() {
+      const user = window.currentUser || {}; 
+      const userRole = String(user.role || "").trim().toUpperCase();
+      const isQtv = (userRole === 'QTV' || userRole === 'ADMIN');
+
+      const sbtnProgress = document.getElementById("sbtn-ctv-progress");
+      const sbtnAdmin = document.getElementById("sbtn-ctv-admin"); 
+      const sbtnInventoryAdmin = document.getElementById("sbtn-admin"); 
+      const btnAddProgram = document.getElementById("btn-qtv-add-program"); 
+
+      if (isQtv) {
+        if (sbtnProgress) sbtnProgress.classList.add("hidden");
+        if (sbtnAdmin) sbtnAdmin.classList.remove("hidden");
+        if (btnAddProgram) btnAddProgram.classList.remove("hidden");
+      } else {
+        if (sbtnProgress) sbtnProgress.classList.remove("hidden");
+        if (sbtnAdmin) sbtnAdmin.classList.add("hidden");          
+        if (btnAddProgram) btnAddProgram.classList.add("hidden");    
+      }
+
+      const grpMenuCtv = document.getElementById("grp-menu-ctv");
+      if (grpMenuCtv) grpMenuCtv.classList.remove("hidden");
+
+      const isQtvOrCtv = isQtv || userRole === 'CTV';
+      if (sbtnInventoryAdmin) {
+        if (isQtvOrCtv) sbtnInventoryAdmin.classList.remove("hidden");
+        else sbtnInventoryAdmin.classList.add("hidden");
+      }
+
+      if (window.currentUser) {
+        document.getElementById("header-user-zone")?.classList.remove("hidden");
+      }
+      if (user.dob && typeof checkBirthdayStatus === 'function') {
+        checkBirthdayStatus(user.dob);
+      }
+    }
+
+    function switchTab(tabId) {
+      // Tự động đóng sidebar trên điện thoại sau khi bấm chọn
+      if (window.innerWidth < 1024) {
+        document.getElementById("main-sidebar")?.classList.add("hidden");
+      }
+
+      const views = ['pos', 'history', 'admin', 'csvc-location', 'csvc-vehicle', 'csvc-duyet', 'csvc-history'];
+      views.forEach(v => { document.getElementById(`view-${v}`)?.classList.add('hidden'); });
+      document.getElementById('module-ctv')?.classList.add('hidden');
+
+      let targetId = tabId;
+      if (tabId === 'csvc_dangky') targetId = 'csvc-location';
+      if (tabId === 'csvc_xinxe') targetId = 'csvc-vehicle';
+      if (tabId === 'csvc_duyet') targetId = 'csvc-duyet';
+      if (tabId === 'csvc_history') targetId = 'csvc-history';
+
+      if (tabId === 'ctv_module') {
+        document.getElementById('module-ctv')?.classList.remove('hidden');
+      } else {
+        const targetView = document.getElementById(`view-${targetId}`);
+        if (targetView) {
+          targetView.classList.remove('hidden');
+          if (targetId === 'admin' && typeof loadAdminBorrowOrders === 'function') loadAdminBorrowOrders();
+          if (targetId === 'csvc-history' && typeof loadAllCsvcHistory === 'function') loadAllCsvcHistory();
+          if (targetId === 'csvc-duyet' && typeof loadPendingCsvcOrders === 'function') loadPendingCsvcOrders();
+          if (targetId === 'history' && typeof loadUserBorrowHistory === 'function') loadUserBorrowHistory();
+        }
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      if (window.currentUser) {
+        applyUserRolePermissions();
+      }
+    });
+  </script>
+</body>
+</html>
