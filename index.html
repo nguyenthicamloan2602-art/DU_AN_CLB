@@ -81,29 +81,28 @@
       display: none !important;
     }
     /* Tự động co giãn khung quét QR Camera trên điện thoại */
-#qr-reader {
-  width: 100% !important;
-  border: none !important;
-}
-#qr-reader__scan_region {
-  width: 100% !important;
-  height: auto !important;
-}
-#qr-reader video {
-  width: 100% !important;
-  height: auto !important;
-  object-fit: cover !important;
-  border-radius: 0.75rem !important;
-}
-/* Co giãn lại nút bấm của khung quét QR */
-#qr-reader__dashboard_section_csr button {
-  background-color: #1e3a8a !important;
-  color: white !important;
-  border-radius: 0.5rem !important;
-  padding: 8px 12px !important;
-  border: none !important;
-  font-weight: bold !important;
-}
+    #qr-reader {
+      width: 100% !important;
+      border: none !important;
+    }
+    #qr-reader__scan_region {
+      width: 100% !important;
+      height: auto !important;
+    }
+    #qr-reader video {
+      width: 100% !important;
+      height: auto !important;
+      object-fit: cover !important;
+      border-radius: 0.75rem !important;
+    }
+    #qr-reader__dashboard_section_csr button {
+      background-color: #1e3a8a !important;
+      color: white !important;
+      border-radius: 0.5rem !important;
+      padding: 8px 12px !important;
+      border: none !important;
+      font-weight: bold !important;
+    }
   </style>
 </head>
 <body class="bg-slate-100/90 min-h-screen flex flex-col font-sans overflow-x-hidden text-slate-800">
@@ -196,7 +195,9 @@
             <div id="menu-vat-pham" class="pl-3 pr-1 py-1 space-y-0.5 border-l-2 border-slate-200 ml-3 my-1">
               <button onclick="switchTab('pos')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Đăng ký vật phẩm </button>
               <button onclick="switchTab('history')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Lịch sử đơn </button>
-              <button onclick="switchTab('admin')" id="sbtn-admin" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 font-bold transition">• Cập nhật trạng thái </button>
+              
+              <!-- ĐỔI SBTN-ADMIN THÀNH MENU-BAN-GIAO ĐỂ ĐIỀU KHIỂN RIÊNG -->
+              <button onclick="switchTab('admin')" id="menu-ban-giao" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 font-bold transition">• Bàn giao và thu hồi</button>
             </div>
           </div>
 
@@ -308,7 +309,7 @@
         </div>
 
         <div id="view-admin" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5">
-          <h2 class="font-bold text-slate-800 text-sm mb-3">📦 TRẠNG THÁI GIAO VÀ NHẬN VẬT PHẨM</h2>
+          <h2 class="font-bold text-slate-800 text-sm mb-3">📦 BÀN GIAO VÀ THU HỒI VẬT PHẨM</h2>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
               <thead><tr class="bg-slate-50 font-bold border-b"><th class="p-2.5">Mã Đơn</th><th class="p-2.5">Đơn Vị</th><th class="p-2.5">Người mượn</th><th class="p-2.5">Vật Phẩm</th><th class="p-2.5">Thời Gian</th><th class="p-2.5">Trạng Thái</th><th class="p-2.5 text-center">Thao Tác</th></tr></thead>
@@ -377,7 +378,6 @@
                       <option value="Giảng đường 7C">Giảng đường 7C</option>
                       <option value="Giảng đường 7D">Giảng đường 7D</option>
                     </optgroup>
-                    </optgroup>
                     <optgroup label="📍 4. ĐỊA ĐIỂM">
                       <option value="Sân đa năng">Sân đa năng</option>
                       <option value="Sảnh tòa nhà 15 tầng">Sảnh tòa nhà 15 tầng</option>
@@ -405,12 +405,10 @@
                 <div class="grid grid-cols-2 gap-2">
                   <div>
                     <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Thời gian bắt đầu *</label>
-                    <!-- Đã đổi ID tránh trùng lặp -->
                     <input type="datetime-local" id="csvc-borrow-start" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
                   </div>
                   <div>
                     <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Thời gian kết thúc *</label>
-                    <!-- Đã đổi ID tránh trùng lặp -->
                     <input type="datetime-local" id="csvc-borrow-end" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
                   </div>
                 </div>
@@ -543,95 +541,95 @@
 
           <div id="ctv-subtab-checkin" class="hidden">
 
-  <!-- 1. GIAO DIỆN QUÉT QR DÀNH CHO CTV (GIỮ NGUYÊN CODE CỦA BẠN) -->
-  <div id="ctv-scanner-container">
-    <div id="box-ctv-scan" class="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 text-center max-w-xl mx-auto space-y-4">
-      <h4 class="font-bold text-xs text-slate-800 uppercase">📷 QUÉT MÃ QR ĐIỂM DANH CA TRỰC</h4>
-      <p class="text-[11px] text-slate-500">Chọn loại điểm danh và hướng Camera vào Mã QR tại Văn phòng.</p>
+            <!-- 1. GIAO DIỆN QUÉT QR DÀNH CHO CTV -->
+            <div id="ctv-scanner-container">
+              <div id="box-ctv-scan" class="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 text-center max-w-xl mx-auto space-y-4">
+                <h4 class="font-bold text-xs text-slate-800 uppercase">📷 QUÉT MÃ QR ĐIỂM DANH CA TRỰC</h4>
+                <p class="text-[11px] text-slate-500">Chọn loại điểm danh và hướng Camera vào Mã QR tại Văn phòng.</p>
 
-      <!-- Nút chọn VÀO CA / RA CA -->
-      <div class="flex justify-center gap-3 my-2">
-        <label class="flex items-center gap-1.5 px-4 py-2 bg-white rounded-xl border border-blue-200 cursor-pointer shadow-sm">
-          <input type="radio" name="checkin_type" value="IN" checked class="w-4 h-4 text-blue-600">
-          <span class="text-xs font-bold text-blue-900">🟢 VÀO CA (Check-in)</span>
-        </label>
-        <label class="flex items-center gap-1.5 px-4 py-2 bg-white rounded-xl border border-amber-200 cursor-pointer shadow-sm">
-          <input type="radio" name="checkin_type" value="OUT" class="w-4 h-4 text-amber-600">
-          <span class="text-xs font-bold text-amber-900">🔴 RA CA (Check-out)</span>
-        </label>
-      </div>
+                <!-- Nút chọn VÀO CA / RA CA -->
+                <div class="flex justify-center gap-3 my-2">
+                  <label class="flex items-center gap-1.5 px-4 py-2 bg-white rounded-xl border border-blue-200 cursor-pointer shadow-sm">
+                    <input type="radio" name="checkin_type" value="IN" checked class="w-4 h-4 text-blue-600">
+                    <span class="text-xs font-bold text-blue-900">🟢 VÀO CA (Check-in)</span>
+                  </label>
+                  <label class="flex items-center gap-1.5 px-4 py-2 bg-white rounded-xl border border-amber-200 cursor-pointer shadow-sm">
+                    <input type="radio" name="checkin_type" value="OUT" class="w-4 h-4 text-amber-600">
+                    <span class="text-xs font-bold text-amber-900">🔴 RA CA (Check-out)</span>
+                  </label>
+                </div>
 
-      <div id="qr-reader" class="w-full max-w-xs mx-auto bg-white rounded-xl overflow-hidden border"></div>
+                <div id="qr-reader" class="w-full max-w-xs mx-auto bg-white rounded-xl overflow-hidden border"></div>
 
-      <div id="checkin-result-msg" class="hidden p-3 rounded-xl text-xs font-bold"></div>
+                <div id="checkin-result-msg" class="hidden p-3 rounded-xl text-xs font-bold"></div>
 
-      <button onclick="startScanner()" class="px-6 py-2.5 bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] hover:opacity-95 text-white font-bold rounded-xl text-xs uppercase shadow transition cursor-pointer">
-        Bật Camera Quét
-      </button>
-    </div>
-  </div>
+                <button onclick="startScanner()" class="px-6 py-2.5 bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] hover:opacity-95 text-white font-bold rounded-xl text-xs uppercase shadow transition cursor-pointer">
+                  Bật Camera Quét
+                </button>
+              </div>
+            </div>
 
-  <!-- 2. GIAO DIỆN BẢNG THEO DÕI DÀNH CHO QTV (TỰ ĐỘNG HIỆN KHI QTV ĐĂNG NHẬP) -->
-  <div id="qtv-checkin-log-container" class="hidden max-w-4xl mx-auto">
-    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
-      
-      <!-- HEADER & BỘ LỌC NGÀY -->
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-100">
-        <div>
-          <h2 class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
-            <span>📋</span> NHẬT KÝ ĐIỂM DANH TRONG NGÀY
-          </h2>
-          <p class="text-xs text-slate-500 mt-0.5">Danh sách CTV Check-in / Check-out thành công</p>
-        </div>
+            <!-- 2. GIAO DIỆN BẢNG THEO DÕI DÀNH CHO QTV -->
+            <div id="qtv-checkin-log-container" class="hidden max-w-4xl mx-auto">
+              <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
+                
+                <!-- HEADER & BỘ LỌC NGÀY -->
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-100">
+                  <div>
+                    <h2 class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+                      <span>📋</span> NHẬT KÝ ĐIỂM DANH TRONG NGÀY
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Danh sách CTV Check-in / Check-out thành công</p>
+                  </div>
 
-        <div class="flex items-center gap-2">
-          <input type="date" id="qtv-filter-date" class="px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="loadQtvCheckinLogs()">
-          <button onclick="loadQtvCheckinLogs()" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition cursor-pointer">
-            🔄 Tải lại
-          </button>
-        </div>
-      </div>
+                  <div class="flex items-center gap-2">
+                    <input type="date" id="qtv-filter-date" class="px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="loadQtvCheckinLogs()">
+                    <button onclick="loadQtvCheckinLogs()" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition cursor-pointer">
+                      🔄 Tải lại
+                    </button>
+                  </div>
+                </div>
 
-      <!-- BẢNG THỐNG KÊ MÓN -->
-      <div class="grid grid-cols-3 gap-3 mb-4">
-        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-          <span class="text-[10px] font-bold text-slate-500 uppercase">Tổng lượt</span>
-          <p id="stat-total-checkin" class="text-base font-black text-slate-800">0</p>
-        </div>
-        <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 text-center">
-          <span class="text-[10px] font-bold text-emerald-700 uppercase">Vào ca (IN)</span>
-          <p id="stat-in-checkin" class="text-base font-black text-emerald-700">0</p>
-        </div>
-        <div class="bg-rose-50 p-3 rounded-xl border border-rose-100 text-center">
-          <span class="text-[10px] font-bold text-rose-700 uppercase">Ra ca (OUT)</span>
-          <p id="stat-out-checkin" class="text-base font-black text-rose-700">0</p>
-        </div>
-      </div>
+                <!-- BẢNG THỐNG KÊ -->
+                <div class="grid grid-cols-3 gap-3 mb-4">
+                  <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase">Tổng lượt</span>
+                    <p id="stat-total-checkin" class="text-base font-black text-slate-800">0</p>
+                  </div>
+                  <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 text-center">
+                    <span class="text-[10px] font-bold text-emerald-700 uppercase">Vào ca (IN)</span>
+                    <p id="stat-in-checkin" class="text-base font-black text-emerald-700">0</p>
+                  </div>
+                  <div class="bg-rose-50 p-3 rounded-xl border border-rose-100 text-center">
+                    <span class="text-[10px] font-bold text-rose-700 uppercase">Ra ca (OUT)</span>
+                    <p id="stat-out-checkin" class="text-base font-black text-rose-700">0</p>
+                  </div>
+                </div>
 
-      <!-- BẢNG HIỂN THỊ DỮ LIỆU -->
-      <div class="overflow-x-auto rounded-xl border border-slate-200">
-        <table class="w-full text-left border-collapse text-xs">
-          <thead>
-            <tr class="bg-blue-50/80 text-blue-900 font-extrabold border-b border-slate-200">
-              <th class="p-3">Giờ</th>
-              <th class="p-3">Tài khoản CTV</th>
-              <th class="p-3">Trạng thái</th>
-              <th class="p-3">Thiết bị (Device ID)</th>
-              <th class="p-3">Ghi chú / Cảnh báo</th>
-            </tr>
-          </thead>
-          <tbody id="qtv-checkin-table-body">
-            <tr>
-              <td colspan="5" class="p-5 text-center text-slate-400">Đang tải dữ liệu điểm danh...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+                <!-- BẢNG HIỂN THỊ DỮ LIỆU -->
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                  <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr class="bg-blue-50/80 text-blue-900 font-extrabold border-b border-slate-200">
+                        <th class="p-3">Giờ</th>
+                        <th class="p-3">Tài khoản CTV</th>
+                        <th class="p-3">Trạng thái</th>
+                        <th class="p-3">Thiết bị (Device ID)</th>
+                        <th class="p-3">Ghi chú / Cảnh báo</th>
+                      </tr>
+                    </thead>
+                    <tbody id="qtv-checkin-table-body">
+                      <tr>
+                        <td colspan="5" class="p-5 text-center text-slate-400">Đang tải dữ liệu điểm danh...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
 
-    </div>
-  </div>
+              </div>
+            </div>
 
-</div>
+          </div>
 
           <!-- SUBTAB 3.4: TIẾN ĐỘ & XẾP LOẠI (DÀNH CHO CTV) -->
           <div id="ctv-subtab-progress" class="hidden space-y-6">
@@ -900,30 +898,41 @@
     function applyUserRolePermissions() {
       const user = window.currentUser || {}; 
       const userRole = String(user.role || "").trim().toUpperCase();
-      const isQtv = (userRole === 'QTV' || userRole === 'ADMIN');
+      const isQtv = (userRole === 'QTV' || userRole === 'ADMIN' || userRole === 'QUẢN TRỊ VIÊN');
+      const isCtv = (userRole === 'CTV' || userRole === 'CỘNG TÁC VIÊN');
 
-      const sbtnProgress = document.getElementById("sbtn-ctv-progress");
-      const sbtnAdmin = document.getElementById("sbtn-ctv-admin"); 
-      const sbtnInventoryAdmin = document.getElementById("sbtn-admin"); 
+      const sbtnProgress = document.getElementById("sbtn-ctv-progress"); // Tab "Đánh giá tiêu chí" của CTV
+      const sbtnAdmin = document.getElementById("sbtn-ctv-admin");       // Tab "Xếp loại CTV" của QTV
+      const menuBanGiao = document.getElementById("menu-ban-giao"); 
       const btnAddProgram = document.getElementById("btn-qtv-add-program"); 
+      const grpMenuCtv = document.getElementById("grp-menu-ctv");
 
       if (isQtv) {
+        // 👑 QTV: Ẩn tiến độ cá nhân của CTV, HIỆN tab Xếp loại CTV và nút Tạo chương trình
         if (sbtnProgress) sbtnProgress.classList.add("hidden");
-        if (sbtnAdmin) sbtnAdmin.classList.remove("hidden");
+        if (sbtnAdmin) sbtnAdmin.classList.remove("hidden");       
         if (btnAddProgram) btnAddProgram.classList.remove("hidden");
-      } else {
+      } else if (isCtv) {
+        // 👤 CTV: HIỆN tiến độ cá nhân, ẨN tab Xếp loại quản trị và nút Tạo chương trình
         if (sbtnProgress) sbtnProgress.classList.remove("hidden");
         if (sbtnAdmin) sbtnAdmin.classList.add("hidden");          
         if (btnAddProgram) btnAddProgram.classList.add("hidden");    
+      } else {
+        // 🌐 Tài khoản ngoài: Ẩn cả hai
+        if (sbtnProgress) sbtnProgress.classList.add("hidden");
+        if (sbtnAdmin) sbtnAdmin.classList.add("hidden");
+        if (btnAddProgram) btnAddProgram.classList.add("hidden");
       }
 
-      const grpMenuCtv = document.getElementById("grp-menu-ctv");
       if (grpMenuCtv) grpMenuCtv.classList.remove("hidden");
 
-      const isQtvOrCtv = isQtv || userRole === 'CTV';
-      if (sbtnInventoryAdmin) {
-        if (isQtvOrCtv) sbtnInventoryAdmin.classList.remove("hidden");
-        else sbtnInventoryAdmin.classList.add("hidden");
+      const isQtvOrCtv = isQtv || isCtv;
+      if (menuBanGiao) {
+        if (isQtvOrCtv) {
+          menuBanGiao.classList.remove("hidden");
+        } else {
+          menuBanGiao.classList.add("hidden");
+        }
       }
 
       if (window.currentUser) {
@@ -956,7 +965,16 @@
         const targetView = document.getElementById(`view-${targetId}`);
         if (targetView) {
           targetView.classList.remove('hidden');
-          if (targetId === 'admin' && typeof loadAdminBorrowOrders === 'function') loadAdminBorrowOrders();
+          
+          // 🛠️ ĐOẠN NÀY ĐẢM BẢO KHI BẤM BÀN GIAO VÀ THU HỒI SẼ GỌI ĐÚNG HÀM TẢI TẤT CẢ ĐƠN QUẢN TRỊ
+          if (targetId === 'admin') {
+            if (typeof loadAdminOrders === 'function') {
+              loadAdminOrders();
+            } else if (typeof loadAdminBorrowOrders === 'function') {
+              loadAdminBorrowOrders(); // Gọi hàm load toàn bộ đơn mượn của hệ thống
+            }
+          }
+
           if (targetId === 'csvc-history' && typeof loadAllCsvcHistory === 'function') loadAllCsvcHistory();
           if (targetId === 'csvc-duyet' && typeof loadPendingCsvcOrders === 'function') loadPendingCsvcOrders();
           if (targetId === 'history' && typeof loadUserBorrowHistory === 'function') loadUserBorrowHistory();
