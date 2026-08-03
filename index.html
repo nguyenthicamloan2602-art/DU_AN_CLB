@@ -987,6 +987,13 @@
         applyUserRolePermissions();
       }
     });
+  function openCreateProgramModal() {
+      document.getElementById("modal-create-program")?.classList.remove("hidden");
+    }
+
+    function closeCreateProgramModal() {
+      document.getElementById("modal-create-program")?.classList.add("hidden");
+    }
   </script>
 </body>
 </html>
