@@ -29,25 +29,29 @@ function switchCtvSubTab(subTabId) {
   const activeTab = document.getElementById(subTabId);
   if (activeTab) activeTab.classList.remove('hidden');
 
-  const currentUser = window.currentUser ? window.currentUser.username : "";
-  const isQtv = window.currentUser && (window.currentUser.role === 'QTV' || window.currentUser.role === 'ADMIN');
+  const user = window.currentUser || {};
+  
+  // 🟢 KIỂM TRA CHUẨN XÁC VAI TRÒ QTV
+  const roleStr = String(user.role || "").trim().toUpperCase();
+  const isQtv = user.isQTV || (roleStr === 'QTV' || roleStr === 'ADMIN' || roleStr === 'QUẢN TRỊ VIÊN');
 
   if (subTabId === 'ctv-subtab-schedule') {
     loadAllWeeklySchedules();
   } else if (subTabId === 'ctv-subtab-events') {
     loadEventsFromSheet();
   } else if (subTabId === 'ctv-subtab-progress') {
-    loadCtvProgressDoubleCircle(currentUser);
+    loadCtvProgressDoubleCircle(user.username);
   } else if (subTabId === 'ctv-subtab-admin') {
     loadAdminRankTable();
   } else if (subTabId === 'ctv-subtab-checkin') {
     const ctvScannerBox = document.getElementById('ctv-scanner-container');
     const qtvLogBox = document.getElementById('qtv-checkin-log-container');
 
+    // 🟢 QTV BẮT BUỘC HIỆN BẢNG NHẬT KÝ ĐIỂM DANH, ẨN CAMERA QUÉT
     if (isQtv) {
       if (ctvScannerBox) ctvScannerBox.classList.add('hidden');
       if (qtvLogBox) qtvLogBox.classList.remove('hidden');
-      loadQtvCheckinLogs();
+      loadQtvCheckinLogs(); // Tải danh sách các bạn CTV đã check-in
     } else {
       if (ctvScannerBox) ctvScannerBox.classList.remove('hidden');
       if (qtvLogBox) qtvLogBox.classList.add('hidden');
@@ -119,7 +123,7 @@ function updateCheckinStats(total, inNum, outNum) {
 window.loadQtvCheckinLogs = loadQtvCheckinLogs;
 window.updateCheckinStats = updateCheckinStats;
 
-// 1. LỊCH TRỰC VĂN PHÒNG - HIỂN THỊ TÊN LÊN LỊCH VÀ KHÔNG GIỚI HẠN NGƯỜI
+// LỊCH TRỰC CỘNG TÁC VIÊN - VẼ KHỐI MÀU CAM RÕ NÉT LÊN LỊCH
 async function loadAllWeeklySchedules() {
   const calendarEl = document.getElementById('ctv-calendar-container');
   if (!calendarEl) return;
@@ -133,7 +137,12 @@ async function loadAllWeeklySchedules() {
         center: 'title',
         right: 'dayGridMonth,timeGridWeek'
       },
+      buttonText: { today: 'Hôm nay', month: 'Xem Tháng', week: 'Xem Tuần' },
       selectable: true,
+      
+      // 🟢 BẮT BUỘC ÉP VẼ KHỐI MÀU (BLOCK EVENT)
+      eventDisplay: 'block',
+      dayMaxEvents: 4,
       
       dateClick: function(info) {
         const user = window.currentUser || {};
@@ -152,7 +161,21 @@ async function loadAllWeeklySchedules() {
       },
 
       eventClick: function(info) {
-        alert(`👤 Trực ca: ${info.event.title}\n⏰ Khung giờ: ${info.event.extendedProps.timeDisplay}\n📝 Ghi chú: ${info.event.extendedProps.ghiChu || 'Không có'}`);
+        const p = info.event.extendedProps;
+        alert(`📋 THÔNG TIN CA TRỰC\n\n👤 Họ tên: ${p.hoTen} (@${p.username})\n⏰ Thời gian: ${p.timeDisplay}\n🔖 Vị trí: ${p.shiftId}\n📝 Ghi chú: ${p.ghiChu || 'Không có'}`);
+      },
+
+      // 🎨 STYLE TRỰC TIẾP CHO KHỐI THẺ SỰ KIỆN MÀU CAM
+      eventDidMount: function(info) {
+        info.el.style.backgroundColor = "#ea580c"; // Màu cam nổi bật
+        info.el.style.borderColor = "#c2410c";
+        info.el.style.color = "#ffffff";
+        info.el.style.borderRadius = "6px";
+        info.el.style.padding = "3px 6px";
+        info.el.style.fontSize = "11px";
+        info.el.style.fontWeight = "bold";
+        info.el.style.margin = "2px 0";
+        info.el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.15)";
       }
     });
     ctvCalendar.render();
@@ -180,25 +203,39 @@ async function loadAllWeeklySchedules() {
       allSchedulesData = result.data || [];
       ctvCalendar.removeAllEvents();
       
-      // Vẽ tên người trực trực tiếp lên ô Lịch ngay sau khi nhận dữ liệu
+      // TẠO KHỐI THẺ SỰ KIỆN NỔI BẬT LÊN LỊCH
       allSchedulesData.forEach(item => {
-        ctvCalendar.addEvent({
-          title: `👤 ${item.hoTen || item.username} (${item.shiftId || 'Ca trực'})`,
-          start: `${item.dateStr}T${item.startTime}`,
-          end: `${item.dateStr}T${item.endTime}`,
-          backgroundColor: '#0284c7',
-          borderColor: '#1e3a8a',
-          extendedProps: { 
-            ghiChu: item.ghiChu,
-            timeDisplay: `${item.startTime} - ${item.endTime}`
-          }
-        });
+        let cleanDate = String(item.dateStr || "").trim();
+        if (cleanDate.includes('T')) cleanDate = cleanDate.split('T')[0];
+
+        // Đảm bảo có chuỗi giờ hợp lệ
+        const startTimeStr = item.startTime ? String(item.startTime).trim() : "08:00";
+        const endTimeStr = item.endTime ? String(item.endTime).trim() : "10:00";
+
+        if (cleanDate) {
+          ctvCalendar.addEvent({
+            title: `👤 ${item.hoTen || item.username} (${item.shiftId || 'Ca trực'})`,
+            start: `${cleanDate}T${startTimeStr}:00`,
+            end: `${cleanDate}T${endTimeStr}:00`,
+            extendedProps: { 
+              username: item.username,
+              hoTen: item.hoTen || item.username,
+              shiftId: item.shiftId,
+              ghiChu: item.ghiChu,
+              timeDisplay: `${startTimeStr} - ${endTimeStr}`
+            }
+          });
+        }
       });
+
+      ctvCalendar.render();
     }
   } catch (err) {
     console.error("Lỗi tải lịch trực:", err);
   }
 }
+
+window.loadAllWeeklySchedules = loadAllWeeklySchedules;
 
 // Bật Modal chọn Ca trực (KHÔNG GIỚI HẠN SỐ LƯỢNG NGƯỜI)
 function openRegisterShiftModal(dateStr) {
@@ -216,12 +253,14 @@ function openRegisterShiftModal(dateStr) {
   FIXED_SHIFTS.forEach(shift => {
     const takenList = daySchedules.filter(s => s.shiftId === shift.id || (s.startTime === shift.start && s.endTime === shift.end));
     const user = window.currentUser || {};
+    // Kiểm tra xem ca này tài khoản hiện tại đã đăng ký chưa
     const isMyShift = takenList.some(s => s.username === user.username);
 
     html += `
       <label class="flex items-center justify-between p-2.5 rounded-xl border ${isMyShift ? 'bg-blue-50 border-blue-300' : 'bg-slate-50 border-slate-200'} cursor-pointer hover:bg-blue-50/50 transition">
         <div class="flex items-center gap-2">
-          <input type="radio" name="shift_slot" value="${shift.id}" ${isMyShift ? 'checked' : ''} class="w-4 h-4 text-blue-600">
+          <!-- Chuyển sang checkbox để chọn được nhiều ca cùng lúc -->
+          <input type="checkbox" name="shift_slot" value="${shift.id}" ${isMyShift ? 'checked' : ''} class="w-4 h-4 text-blue-600 rounded">
           <div>
             <span class="font-extrabold text-slate-800 text-xs">${shift.id} (${shift.time})</span>
             ${takenList.length > 0 ? `<div class="text-[10px] text-slate-500 mt-0.5">👥 Đã ký (${takenList.length}): ${takenList.map(t => t.hoTen || t.username).join(', ')}</div>` : ''}
@@ -239,7 +278,7 @@ function openRegisterShiftModal(dateStr) {
 
 function closeRegisterShiftModal() { document.getElementById('modal-register-shift')?.classList.add('hidden'); }
 
-// Đăng ký ca trực với phản ứng Nút bấm (Visual Feedback)
+// 2. GỬI ĐĂNG KÝ NHIỀU CA CÙNG LÚC
 async function submitWeeklySchedule(e) {
   if (e) e.preventDefault();
   
@@ -251,16 +290,23 @@ async function submitWeeklySchedule(e) {
 
   const user = window.currentUser || { username: '' };
   const shiftDate = document.getElementById('shift-date')?.value;
-  const selectedRadio = document.querySelector('input[name="shift_slot"]:checked');
+  
+  // Lấy tất cả ca được tích checkbox
+  const selectedCheckboxes = document.querySelectorAll('input[name="shift_slot"]:checked');
   const note = document.getElementById('shift-note')?.value || '';
 
-  if (!selectedRadio) {
-    if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.innerText = "Xác Nhận Đăng Ký"; }
-    return alert("⚠️ Vui lòng chọn 1 ca trực!");
-  }
-
-  const shiftId = selectedRadio.value;
-  const shiftObj = FIXED_SHIFTS.find(s => s.id === shiftId);
+  const selectedShifts = [];
+  selectedCheckboxes.forEach(cb => {
+    const shiftId = cb.value;
+    const shiftObj = FIXED_SHIFTS.find(s => s.id === shiftId);
+    if (shiftObj) {
+      selectedShifts.push({
+        shiftId: shiftId,
+        startTime: shiftObj.start,
+        endTime: shiftObj.end
+      });
+    }
+  });
 
   try {
     const res = await fetch(API_URL, {
@@ -271,19 +317,19 @@ async function submitWeeklySchedule(e) {
         username: user.username,
         hoTen: user.hoTen || user.username,
         dateStr: shiftDate,
-        shiftId: shiftId,
-        startTime: shiftObj.start,
-        endTime: shiftObj.end,
+        shifts: selectedShifts, // Gửi mảng danh sách các ca được chọn
         note: note
       })
     });
 
     const result = JSON.parse(await res.text());
     if (result.success) {
-      alert(result.message || "🎉 Đăng ký ca trực thành công!");
+      alert(result.message || "🎉 Cập nhật lịch trực thành công!");
       closeRegisterShiftModal();
-      loadAllWeeklySchedules(); // Hiển thị tên lên Lịch ngay lập tức
-    } else alert("❌ Lỗi: " + result.message);
+      loadAllWeeklySchedules(); // Vẽ lại lịch với toàn bộ các ca mới
+    } else {
+      alert("❌ Lỗi: " + result.message);
+    }
   } catch (err) { 
     alert("❌ Lỗi kết nối!"); 
   } finally {
@@ -477,6 +523,74 @@ async function approveCtvRank(username, caTruc, suKien) {
     loadAdminRankTable();
   } catch (err) { alert("❌ Lỗi kết nối!"); }
 }
+
+// ==================== BỔ SUNG HÀM QUÉT MÃ QR ĐIỂM DANH (CAMERA) ====================
+function startScanner() {
+  const msgEl = document.getElementById("checkin-result-msg");
+  if (msgEl) msgEl.classList.add("hidden");
+
+  // Khởi tạo khung quét QR nếu chưa có
+  if (!html5QrcodeScanner) {
+    html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { 
+      fps: 10, 
+      qrbox: { width: 250, height: 250 },
+      rememberLastUsedCamera: true
+    }, false);
+  }
+  
+  html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+}
+
+async function onScanSuccess(decodedText, decodedResult) {
+  // Dừng quét sau khi đọc thành công 1 mã
+  if (html5QrcodeScanner) {
+    html5QrcodeScanner.clear();
+  }
+
+  const user = window.currentUser;
+  if (!user) return alert("Vui lòng đăng nhập lại!");
+
+  const typeRadio = document.querySelector('input[name="checkin_type"]:checked');
+  const type = typeRadio ? typeRadio.value : "IN";
+  
+  const msgEl = document.getElementById("checkin-result-msg");
+  msgEl.className = "p-3 rounded-xl text-xs font-bold mt-3 bg-blue-100 text-blue-800";
+  msgEl.innerText = "⏳ Đang gửi dữ liệu điểm danh...";
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "CHECKIN_CTV",
+        username: user.username,
+        deviceId: "Web_Browser",
+        type: type,
+        qrData: decodedText
+      })
+    });
+
+    const result = JSON.parse(await res.text());
+    
+    if (result.success) {
+      msgEl.className = "p-3 rounded-xl text-xs font-bold mt-3 bg-emerald-100 text-emerald-800";
+      msgEl.innerText = "✅ " + result.message;
+    } else {
+      msgEl.className = "p-3 rounded-xl text-xs font-bold mt-3 bg-rose-100 text-rose-800";
+      msgEl.innerText = "❌ " + result.message;
+    }
+  } catch (e) {
+    msgEl.className = "p-3 rounded-xl text-xs font-bold mt-3 bg-rose-100 text-rose-800";
+    msgEl.innerText = "❌ Lỗi kết nối mạng!";
+  }
+}
+
+function onScanFailure(error) {
+  // Bỏ qua các lỗi đọc mờ (thư viện sẽ tự quét tiếp)
+}
+
+// Bắt buộc khai báo window để file HTML có thể kích hoạt
+window.startScanner = startScanner;
 
 // KHAI BÁO CÔNG KHAI TOÀN CỤC
 window.switchCtvSubTab = switchCtvSubTab;

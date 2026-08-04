@@ -2,16 +2,26 @@
  * MODULE 2: QUẢN LÝ CƠ SỞ VẬT CHẤT (CSVC.JS FULL CHUẨN ID)
  */
 
-// 1. RENDER LỊCH CẢNH BÁO SỬ DỤNG GIẢNG ĐƯỜNG / ĐỊA ĐIỂM + XỬ LÝ CLICK XEM CHI TIẾT
+// RENDER LỊCH CƠ SỞ VẬT CHẤT (ÉP VẼ KHỐI MÀU TRÊN CẢ XEM THÁNG LẪN XEM TUẦN)
 async function renderCsvcCalendarEvents() {
   const container = document.getElementById("csvc-calendar-container");
   if (!container || typeof FullCalendar === 'undefined') return;
 
   const calendar = new FullCalendar.Calendar(container, {
     initialView: 'dayGridMonth',
-    headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek'
+    },
+    buttonText: { today: 'Hôm nay', month: 'Xem Tháng', week: 'Xem Tuần' },
     locale: 'vi',
     height: 'auto',
+
+    // 🟢 CẤU HÌNH QUAN TRỌNG: ÉP HIỂN THỊ DẠNG KHỐI MÀU TOÀN BỘ
+    eventDisplay: 'block',
+    dayMaxEvents: 3,
+
     events: async function(info, successCallback, failureCallback) {
       try {
         const res = await fetch(API_URL, {
@@ -26,33 +36,34 @@ async function renderCsvcCalendarEvents() {
       } catch (e) { successCallback([]); }
     },
     
-    // TẠO DẠNG THE BO TRÒN DỄ NHÌN
+    // 🎨 TẠO KHỐI MÀU TÍM INDIGO CHO CSVC (BLOCK EVENT)
     eventDidMount: function(info) {
+      info.el.style.backgroundColor = "#4f46e5"; // Indigo-600
+      info.el.style.borderColor = "#4338ca";
+      info.el.style.color = "#ffffff";
       info.el.style.borderRadius = "6px";
-      info.el.style.padding = "2px 6px";
+      info.el.style.padding = "2px 5px";
+      info.el.style.fontSize = "11px";
       info.el.style.fontWeight = "bold";
-      info.el.style.fontSize = "10px";
-      info.el.style.cursor = "pointer";
+      info.el.style.margin = "2px 0";
+      info.el.style.boxShadow = "0 1px 2px rgba(0,0,0,0.1)";
     },
 
-    // BẮT SỰ KIỆN KHI CLICK VÀO LỊCH ĐỂ BẬT THÔNG TIN PHIẾU
     eventClick: function(info) {
       const p = info.event.extendedProps;
-      
       const tStart = info.event.start ? new Date(info.event.start).toLocaleString('vi-VN') : 'N/A';
       const tEnd = info.event.end ? new Date(info.event.end).toLocaleString('vi-VN') : 'N/A';
       const linkStr = p.fileLink ? `\n📎 Link kế hoạch: ${p.fileLink}` : '';
 
       alert(
-        `🏛️ THÔNG TIN CHI TIẾT ĐĂNG KÝ GIẢNG ĐƯỜNG / ĐỊA ĐIỂM\n\n` +
-        `🔖 Mã đơn: ${p.id}\n` +
-        `🏢 Đơn vị mượn: ${p.donVi}\n` +
-        `📍 Giảng đường / Địa điểm: ${p.location}\n` +
-        `👤 Người phụ trách: ${p.name} (📞 ${p.phone})\n` +
-        `✉️ Email: ${p.email}\n` +
+        `🏛️ THÔNG TIN ĐĂNG KÝ CSVC\n\n` +
+        `🔖 Mã đơn: ${p.id || info.event.id}\n` +
+        `🏢 Đơn vị mượn: ${p.donVi || 'Chưa rõ'}\n` +
+        `📍 Địa điểm: ${p.location || info.event.title}\n` +
+        `👤 Người phụ trách: ${p.name || 'N/A'} (${p.phone || 'N/A'})\n` +
         `⏰ Bắt đầu: ${tStart}\n` +
         `⌛ Kết thúc: ${tEnd}\n` +
-        `📝 Mục đích / Nội dung: ${p.reason}` +
+        `📝 Mục đích: ${p.reason || 'Sử dụng địa điểm'}` +
         linkStr
       );
     }

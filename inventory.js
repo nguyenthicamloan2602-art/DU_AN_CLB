@@ -7,15 +7,10 @@
 let selectedItemsCart = {}; // Lưu danh sách vật phẩm người dùng chọn mượn
 let globalAvailableItems = []; // Danh sách vật phẩm trống kho từ server
 
-// 1. RENDER LỊCH CẢNH BÁO MƯỢN VẬT PHẨM
+// RENDER LỊCH MƯỢN VẬT PHẨM (ÉP VẼ KHỐI MÀU TRÊN CẢ XEM THÁNG LẪN XEM TUẦN)
 async function renderCalendarEvents() {
   const container = document.getElementById("calendar-container");
-  if (!container) return;
-
-  if (typeof FullCalendar === 'undefined') {
-    container.innerHTML = `<p class="text-xs text-red-500 p-4">⚠️ Chưa tải thư viện FullCalendar!</p>`;
-    return;
-  }
+  if (!container || typeof FullCalendar === 'undefined') return;
 
   const calendar = new FullCalendar.Calendar(container, {
     initialView: 'dayGridMonth',
@@ -24,11 +19,14 @@ async function renderCalendarEvents() {
       center: 'title',
       right: 'dayGridMonth,timeGridWeek'
     },
-    buttonText: { today: 'Hôm nay', month: 'Tháng', week: 'Tuần' },
+    buttonText: { today: 'Hôm nay', month: 'Xem Tháng', week: 'Xem Tuần' },
     locale: 'vi',
     height: 'auto',
-    dayMaxEvents: 2,
+    
+    // 🟢 CẤU HÌNH QUAN TRỌNG: ÉP HIỂN THỊ DẠNG KHỐI MÀU TOÀN BỘ
     eventDisplay: 'block',
+    dayMaxEvents: 3, // Giới hạn 3 khối/ngày, nhiều hơn sẽ gom gọn "+ x khác"
+
     events: async function(info, successCallback, failureCallback) {
       try {
         const res = await fetch(API_URL, {
@@ -43,37 +41,39 @@ async function renderCalendarEvents() {
       } catch (e) { successCallback([]); }
     },
     
+    // 🎨 TẠO KHỐI MÀU XANH DƯƠNG CHO VẬT PHẨM (BLOCK EVENT)
     eventDidMount: function(info) {
-      info.el.style.borderRadius = "8px";
-      info.el.style.padding = "2px 6px";
+      info.el.style.backgroundColor = "#0284c7"; // Blue-600
+      info.el.style.borderColor = "#0369a1";
+      info.el.style.color = "#ffffff";
+      info.el.style.borderRadius = "6px";
+      info.el.style.padding = "2px 5px";
+      info.el.style.fontSize = "11px";
       info.el.style.fontWeight = "bold";
-      info.el.style.fontSize = "10px";
-      info.el.style.whiteSpace = "nowrap";
-      info.el.style.overflow = "hidden";
-      info.el.style.textOverflow = "ellipsis";
-      info.el.style.maxWidth = "100%";
-      info.el.style.cursor = "pointer";
-      info.el.style.border = "none";
+      info.el.style.margin = "2px 0";
+      info.el.style.boxShadow = "0 1px 2px rgba(0,0,0,0.1)";
     },
 
     eventClick: function(info) {
       const p = info.event.extendedProps;
       let itemsListStr = "Chưa rõ";
       try {
-        const items = JSON.parse(p.vatPhamRaw);
-        itemsListStr = items.map(it => `• ${it.name || it.id}: ${it.qty}`).join("\n");
-      } catch(e) { itemsListStr = p.vatPhamRaw; }
+        const items = typeof p.vatPhamRaw === 'string' ? JSON.parse(p.vatPhamRaw) : p.vatPhamRaw;
+        itemsListStr = items.map(it => `• ${it.name || it.id}: x${it.qty}`).join("\n");
+      } catch(e) { itemsListStr = p.vatPhamRaw || "-"; }
 
       const startTime = info.event.start ? new Date(info.event.start).toLocaleString('vi-VN') : 'N/A';
       const endTime = info.event.end ? new Date(info.event.end).toLocaleString('vi-VN') : 'N/A';
 
-      alert(`📋 CHI TIẾT PHIẾU MƯỢN\n\nMã Đơn: ${p.bookingId}\n🏢 Đơn vị: ${p.donVi}\n👤 Người đại diện: ${p.nguoiDaiDien}\n📞 SĐT: ${p.sdt}\n⏰ Mượn: ${startTime}\n⌛ Trả: ${endTime}\n📝 Ghi chú: ${p.ghiChu}\n-------------------\n📦 DỤNG CỤ:\n${itemsListStr}`);
+      alert(`📋 CHI TIẾT PHIẾU MƯỢN VẬT PHẨM\n\n🔖 Mã Đơn: ${p.bookingId || info.event.id}\n🏢 Đơn vị: ${p.donVi || 'Chưa rõ'}\n👤 Người đại diện: ${p.nguoiDaiDien || 'N/A'}\n📞 SĐT: ${p.sdt || 'N/A'}\n⏰ Mượn: ${startTime}\n⌛ Trả: ${endTime}\n📝 Ghi chú: ${p.ghiChu || 'Không'}\n-------------------\n📦 DỤNG CỤ:\n${itemsListStr}`);
     }
   });
 
   calendar.render();
-  loadInventoryItems(); // Tải danh sách vật phẩm trống kho
+  loadInventoryItems();
 }
+
+window.renderCalendarEvents = renderCalendarEvents;
 
 // 2. TẢI VẬT PHẨM TRỐNG KHO THEO KHOẢNG THỜI GIAN CHỌN
 async function loadInventoryItems() {
@@ -329,12 +329,12 @@ async function loadUserBorrowHistory() {
 
 window.loadUserBorrowHistory = loadUserBorrowHistory;
 
-// 9. TẢI BẢNG BÀN GIAO / THU HỒI (CTV/QTV)
+// TẢI BẢNG BÀN GIAO / THU HỒI (FIXED AN TOÀN NGOẠI LỆ JSON)
 async function loadAdminBorrowOrders() {
   const tbody = document.getElementById("admin-orders-table");
   if (!tbody) return;
 
-  tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-xs text-slate-400">⏳ Đang tải ...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-xs text-slate-400 font-sans animate-pulse">⏳ Đang tải danh sách bàn giao từ Google Sheet...</td></tr>`;
 
   try {
     const res = await fetch(API_URL, {
@@ -342,63 +342,71 @@ async function loadAdminBorrowOrders() {
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "GET_ALL_BORROW_ORDERS" })
     });
-    const result = JSON.parse(await res.text());
+
+    const text = await res.text();
+    let result = {};
+    
+    try {
+      result = JSON.parse(text);
+    } catch (parseErr) {
+      console.error("Server trả về HTML lỗi:", text);
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-xs text-rose-500 font-bold">❌ Lỗi phản hồi Máy chủ Google Apps Script (Cần Deploy lại New Version).</td></tr>`;
+      return;
+    }
 
     if (result.success && result.data && result.data.length > 0) {
       tbody.innerHTML = result.data.map(item => {
         let itemsStr = "";
         try {
-          const items = JSON.parse(item.vatPhamRaw);
+          const items = typeof item.vatPhamRaw === 'string' ? JSON.parse(item.vatPhamRaw) : item.vatPhamRaw;
           if (Array.isArray(items)) {
-            itemsStr = items.map(it => `<span class="inline-block bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded mr-1 mb-1 border border-slate-200"><b>${it.name || it.id}</b>: ${it.qty}</span>`).join(" ");
+            itemsStr = items.map(it => `<span class="inline-block bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded mr-1 mb-1 border border-slate-200"><b>${it.name || it.id}</b>: x${it.qty}</span>`).join(" ");
           } else { itemsStr = item.vatPhamRaw; }
         } catch(e) { itemsStr = item.vatPhamRaw || "Chưa rõ"; }
 
         const status = String(item.trangThai || "REGISTERED").toUpperCase();
         let statusBadge = `<span class="inline-block whitespace-nowrap px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">📋 Đã đăng ký</span>`;
         let actionButtons = `
-          <button onclick="updateBorrowStatusAction('${item.bookingId}', 'DELIVERED')" class="whitespace-nowrap px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold transition shadow-sm cursor-pointer">📦 Bàn giao </button>
+          <button onclick="updateBorrowStatusAction('${item.bookingId}', 'DELIVERED')" class="whitespace-nowrap px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold transition shadow-sm cursor-pointer">📦 Bàn giao</button>
         `;
 
         if (status === "DELIVERED" || status === "APPROVED") {
           statusBadge = `<span class="inline-block whitespace-nowrap px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">📦 Đã nhận</span>`;
           actionButtons = `
-            <button onclick="updateBorrowStatusAction('${item.bookingId}', 'RETURNED')" class="whitespace-nowrap px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold transition shadow-sm cursor-pointer">🎉 Thu hồi </button>
+            <button onclick="updateBorrowStatusAction('${item.bookingId}', 'RETURNED')" class="whitespace-nowrap px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold transition shadow-sm cursor-pointer">🎉 Thu hồi</button>
           `;
         } else if (status === "RETURNED") {
           statusBadge = `<span class="inline-block whitespace-nowrap px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">🎉 Đã trả</span>`;
-          actionButtons = `<span class="whitespace-nowrap text-[11px] font-bold text-slate-400 italic">✅ Đã hoàn tất</span>`;
+          actionButtons = `<span class="whitespace-nowrap text-[11px] font-bold text-slate-400 italic">✅ Hoàn tất</span>`;
         } else if (status === "REJECTED" || status === "CANCELLED") {
           statusBadge = `<span class="inline-block whitespace-nowrap px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">❌ Đã hủy</span>`;
           actionButtons = `<span class="whitespace-nowrap text-[11px] font-bold text-rose-400 italic">❌ Đã từ chối</span>`;
         }
 
-        const tMuon = item.thoiGianMuon ? new Date(item.thoiGianMuon).toLocaleDateString('vi-VN') : 'N/A';
-        const tTra = item.thoiGianTra ? new Date(item.thoiGianTra).toLocaleDateString('vi-VN') : 'N/A';
-
         return `
-          <tr class="border-b hover:bg-slate-50/80 text-xs transition align-middle">
+          <tr class="border-b hover:bg-slate-50 text-xs transition align-middle font-sans">
             <td class="p-3 font-extrabold text-blue-900 whitespace-nowrap">${item.bookingId}</td>
-            <td class="p-3 font-bold text-slate-800 min-w-[180px]">${item.donVi || 'Chưa rõ'}</td>
+            <td class="p-3 font-bold text-slate-800 min-w-[150px]">${item.donVi || 'Chưa rõ'}</td>
             <td class="p-3 font-medium text-slate-700 whitespace-nowrap">
               <div>${item.nguoiDaiDien || 'N/A'}</div>
               <div class="text-[10px] text-slate-400 font-normal">📞 ${item.sdt || 'N/A'}</div>
             </td>
-            <td class="p-3 font-medium text-slate-700 min-w-[200px]">${itemsStr}</td>
-            <td class="p-3 text-slate-600 font-semibold whitespace-nowrap">${tMuon} - ${tTra}</td>
+            <td class="p-3 font-medium text-slate-700 min-w-[180px]">${itemsStr}</td>
+            <td class="p-3 text-slate-600 font-semibold whitespace-nowrap">${item.thoiGianMuon || '-'} ➔ ${item.thoiGianTra || '-'}</td>
             <td class="p-3 whitespace-nowrap">${statusBadge}</td>
             <td class="p-3 text-center whitespace-nowrap">${actionButtons}</td>
           </tr>
         `;
       }).join('');
     } else {
-      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-xs text-slate-400">Hiện chưa có đơn mượn nào cần bàn giao / thu hồi.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-xs text-slate-400 font-sans">Hiện chưa có đơn mượn nào cần bàn giao / thu hồi.</td></tr>`;
     }
   } catch(e) {
-    console.error("Lỗi tải danh sách bàn giao:", e);
-    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-xs text-red-500">❌ Lỗi kết nối máy chủ!</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-xs text-rose-500 font-sans">❌ Lỗi kết nối: ${e.message}</td></tr>`;
   }
 }
+
+window.loadAdminBorrowOrders = loadAdminBorrowOrders;
 
 async function updateBorrowStatusAction(bookingId, status) {
   if (!confirm(`Xác nhận cập nhật đơn ${bookingId} sang trạng thái: ${status}?`)) return;

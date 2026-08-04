@@ -77,10 +77,15 @@
       transform: translateY(-1px) scale(1.01);
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
     }
+    .fc-daygrid-event {
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      border-radius: 6px !important;
+    }
     .fc-event-title {
-      font-size: 0.7rem !important;
+      font-size: 11px !important;
       font-weight: 700 !important;
-      line-height: 1.2 !important;
     }
     .fc-timeGridWeek-button, .fc-dayGridMonth-button {
       display: none !important;
@@ -207,7 +212,7 @@
               <button onclick="switchTab('history')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Lịch sử đơn </button>
               
               <!-- MENU BÀN GIAO: BỊ ẨN NẾU LÀ TÀI KHOẢN NGOÀI -->
-              <button onclick="switchTab('admin')" id="menu-ban-giao" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 font-bold transition">• Bàn giao và thu hồi</button>
+              <button onclick="switchTab('admin')" id="menu-ban-giao" class="hidden w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 font-bold transition">• Bàn giao và thu hồi</button>
             </div>
           </div>
 
@@ -234,7 +239,7 @@
               <button onclick="switchCtvSub('ctv-subtab-checkin')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Điểm danh</button>
               <button onclick="switchCtvSub('ctv-subtab-events')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Đăng ký hoạt động</button>
               <button id="sbtn-ctv-progress" onclick="switchCtvSub('ctv-subtab-progress')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Đánh giá tiêu chí</button>
-              <button id="sbtn-ctv-admin" onclick="switchCtvSub('ctv-subtab-admin')" class="hidden w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 font-bold transition">• Xếp loại CTV</button>
+              <button id="sbtn-ctv-admin" onclick="switchCtvSub('ctv-subtab-admin')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 font-bold transition">• Xếp loại CTV</button>
             </div>
           </div>
         </nav>
@@ -539,7 +544,7 @@
 
                 <div class="flex items-center gap-2">
                   <!-- NÚT CẤU HÌNH CỦA QTV -->
-                  <button id="btn-qtv-config-schedule" onclick="openConfigScheduleModal()" class="hidden px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold rounded-xl shadow transition cursor-pointer">
+                  <button id="btn-qtv-config-schedule" onclick="openConfigScheduleModal()" class="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold rounded-xl shadow transition cursor-pointer">
                     ⚙️ Cấu Hình Mở Lịch Trực
                   </button>
                   <button onclick="loadAllWeeklySchedules()" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
@@ -562,7 +567,7 @@
           <div id="ctv-subtab-events" class="hidden">
             <div class="flex justify-between items-center mb-4">
               <h3 class="text-xs font-extrabold text-slate-800 uppercase">🎉 DANH SÁCH CHƯƠNG TRÌNH ĐANG MỞ ĐĂNG KÝ</h3>
-              <button id="btn-qtv-add-program" onclick="openCreateProgramModal()" class="hidden px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-bold rounded-xl text-xs shadow-md transition cursor-pointer flex items-center gap-1.5">
+              <button id="btn-qtv-add-program" onclick="openCreateProgramModal()" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-bold rounded-xl text-xs shadow-md transition cursor-pointer flex items-center gap-1.5">
                 ➕ Tạo Chương Trình Mới
               </button>
             </div>
@@ -955,9 +960,9 @@
   <!-- SCRIPT HỆ THỐNG KẾT NỐI -->
   <script src="./config.js"></script>
   <script src="./auth.js"></script>
-  <script src="./inventory.js"></script>
-  <script src="./csvc.js"></script>
-  <script src="ctv.js?v=999"></script>
+  <script src="./inventory.js?v=2026"></script>
+  <script src="./csvc.js?v=2026"></script>
+  <script src="ctv.js?v=2026"></script>
 
   <script>
     function toggleUserMenu() { document.getElementById("user-dropdown-menu")?.classList.toggle("hidden"); }
@@ -975,52 +980,83 @@
     }
     window.switchCtvSub = switchCtvSub;
 
-    // PHÂN QUYỀN HIỂN THỊ CHUẨN XÁC CHO MỌI VAI TRÒ (CTV, ĐƠN VỊ, QTV)
-      function applyUserRolePermissions() {
-        const user = window.currentUser || {}; 
-        const userRole = String(user.role || "").trim().toUpperCase();
-        const userType = String(user.userType || "").trim().toUpperCase();
+    // PHÂN QUYỀN KHÓA CỨNG: CHỈ ADMIN MỚI ĐƯỢC THẤY NÚT TẠO CHƯƠNG TRÌNH MỚI
+    function applyUserRolePermissions() {
+    const user = window.currentUser || {}; 
+    const role = String(user.role || "").trim().toUpperCase();
+    const userType = String(user.userType || "").trim().toUpperCase();
 
-        // Kiểm tra vai trò chính xác
-        const isQtv = (userRole === 'QTV' || userRole === 'ADMIN' || userRole === 'QUẢN TRỊ VIÊN');
-        const isExternal = (userType === 'EXTERNAL' || userRole === 'DONVI' || userRole === 'ĐƠN VỊ');
-        const isCtv = (userRole === 'CTV' || userType === 'INTERNAL') && !isQtv;
+    // 1. Mở rộng nhận diện ADMIN (Bắt thêm QTV, SUPERADMIN...)
+    const IS_ADMIN = (
+      role.includes('ADMIN') || 
+      role.includes('QUẢN TRỊ') || 
+      role.includes('QTV')
+    );
+    
+    // 2. Nhận diện ĐƠN VỊ NGOÀI
+    const IS_EXTERNAL = !IS_ADMIN && (
+      userType === 'EXTERNAL' || 
+      role.includes('DONVI') || 
+      role.includes('ĐƠN VỊ')
+    );
+    
+    // 3. Nhận diện CỘNG TÁC VIÊN (CTV)
+    const IS_CTV = !IS_ADMIN && !IS_EXTERNAL;
 
-        // Lấy danh sách các nút menu
-        const sbtnProgress = document.getElementById("sbtn-ctv-progress");
-        const sbtnAdmin = document.getElementById("sbtn-ctv-admin");
-        const btnAddProgram = document.getElementById("btn-qtv-add-program"); 
-        const btnConfigSchedule = document.getElementById("btn-qtv-config-schedule");
-        const menuBanGiao = document.getElementById("menu-ban-giao");
+    // Lấy các element giao diện
+    const menuBanGiao = document.getElementById("menu-ban-giao");
+    const sbtnProgress = document.getElementById("sbtn-ctv-progress");
+    const sbtnAdmin = document.getElementById("sbtn-ctv-admin");
+    const btnAddProgram = document.getElementById("btn-qtv-add-program");
+    const btnConfigSchedule = document.getElementById("btn-qtv-config-schedule");
+    const sbtnCsvcDuyet = document.getElementById("sbtn-csvc-duyet");
 
-        // 1. MENU BÀN GIAO VÀ THU HỒI: QTV và CTV Nội bộ đều thấy (Chỉ ẩn đối với Đơn vị bên ngoài - External)
-        if (menuBanGiao) {
-          if (isExternal) {
-            menuBanGiao.classList.add("hidden");
-          } else {
-            menuBanGiao.classList.remove("hidden"); // Mở cho CTV & QTV
-          }
-        }
+    // Debug kiểm tra xem có lấy được Element không (Có thể xóa sau khi chạy ngon)
+    if (!menuBanGiao) {
+      console.warn("⚠️ Không tìm thấy element có id='menu-ban-giao' trong HTML!");
+    }
 
-        // 2. PHÂN QUYỀN TRONG MODULE QUẢN LÝ CỘNG TÁC VIÊN
-        if (isQtv) {
-          // QTV: Thấy tab Xếp loại CTV, nút Cấu hình lịch, nút Tạo chương trình
-          if (sbtnProgress) sbtnProgress.classList.add("hidden");
-          if (sbtnAdmin) sbtnAdmin.classList.remove("hidden");       
-          if (btnAddProgram) btnAddProgram.classList.remove("hidden");
-          if (btnConfigSchedule) btnConfigSchedule.classList.remove("hidden");
-        } else {
-          // CTV (Cộng tác viên) & Đơn vị: HIỆN TAB ĐÁNH GIÁ TIÊU CHÍ, ẩn các nút QTV
-          if (sbtnProgress) sbtnProgress.classList.remove("hidden"); // Mở lại tab Đánh giá tiêu chí
-          if (sbtnAdmin) sbtnAdmin.classList.add("hidden");          
-          if (btnAddProgram) btnAddProgram.classList.add("hidden"); 
-          if (btnConfigSchedule) btnConfigSchedule.classList.add("hidden");
-        }
-
-        if (window.currentUser) {
-          document.getElementById("header-user-zone")?.classList.remove("hidden");
-        }
+    // =========================================================================
+    // 🟢 QUY TẮC 1: TAB BÀN GIAO VÀ THU HỒI
+    // =========================================================================
+    if (menuBanGiao) {
+      if (IS_ADMIN || IS_CTV) {
+        menuBanGiao.classList.remove("hidden"); // ADMIN & CTV: Hiện Bàn giao
+        menuBanGiao.style.display = "";          // Đảm bảo không bị dính display: none trong CSS
+      } else {
+        menuBanGiao.classList.add("hidden");    // External: Ẩn Bàn giao
       }
+    }
+
+    // =========================================================================
+    // 🟢 QUY TẮC 2: CÁC TÍNH NĂNG QUẢN TRỊ VÀ TÍNH NĂNG CTV
+    // =========================================================================
+    if (IS_ADMIN) {
+      if (sbtnAdmin) sbtnAdmin.classList.remove("hidden");            // Xếp loại CTV
+      if (btnConfigSchedule) btnConfigSchedule.classList.remove("hidden"); // Mở thời gian đăng ký lịch trực
+      if (btnAddProgram) btnAddProgram.classList.remove("hidden");    // Tạo mới chương trình
+      if (sbtnCsvcDuyet) sbtnCsvcDuyet.classList.remove("hidden");    // Duyệt CSVC
+      if (sbtnProgress) sbtnProgress.classList.add("hidden");
+    } 
+    else if (IS_CTV) {
+      if (sbtnAdmin) sbtnAdmin.classList.add("hidden");             
+      if (btnConfigSchedule) btnConfigSchedule.classList.add("hidden"); 
+      if (btnAddProgram) btnAddProgram.classList.add("hidden");        
+      if (sbtnCsvcDuyet) sbtnCsvcDuyet.classList.add("hidden");     
+      if (sbtnProgress) sbtnProgress.classList.remove("hidden");    
+    } 
+    else { // EXTERNAL
+      if (sbtnAdmin) sbtnAdmin.classList.add("hidden");             
+      if (btnConfigSchedule) btnConfigSchedule.classList.add("hidden"); 
+      if (btnAddProgram) btnAddProgram.classList.add("hidden");        
+      if (sbtnCsvcDuyet) sbtnCsvcDuyet.classList.add("hidden");
+      if (sbtnProgress) sbtnProgress.classList.add("hidden");      
+    }
+
+    if (window.currentUser && document.getElementById("header-user-zone")) {
+      document.getElementById("header-user-zone").classList.remove("hidden");
+    }
+  }
 
     // CHUYỂN TAB VÀ TẢI LỊCH SỬ CHUẨN KHÔNG BỊ LỖI
     function switchTab(tabId) {
