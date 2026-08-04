@@ -187,7 +187,7 @@ async function loadPendingCsvcOrders() {
   const tbody = document.getElementById("csvc-pending-table");
   if (!tbody) return;
 
-  tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-xs font-semibold text-slate-400">⏳ Đang tải danh sách đơn CSVC từ Google Sheet...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-xs font-semibold text-slate-400">⏳ Đang tải ...</td></tr>`;
 
   try {
     const res = await fetch(API_URL, {
@@ -244,7 +244,7 @@ async function loadPendingCsvcOrders() {
         `;
       }).join('');
     } else {
-      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-xs text-slate-400">Hiện chưa có đơn mượn CSVC nào trong hệ thống.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-xs text-slate-400">Hiện chưa có đơn đăng ký trên hệ thống.</td></tr>`;
     }
   } catch (e) {
     console.error("Lỗi tải đơn CSVC:", e);
@@ -297,12 +297,12 @@ async function approveCsvcOrder(orderId, orderType, currentStatus) {
   }
 }
 
-// 2. TẢI TOÀN BỘ LỊCH SỬ ĐƠN CSVC (CHO TAB LỊCH SỬ)
+// TẢI TOÀN BỘ LỊCH SỬ CƠ SỞ VẬT CHẤT TỪ GOOGLE SHEET (KHÔNG LỌC)
 async function loadAllCsvcHistory() {
   const tbody = document.getElementById("csvc-history-table");
   if (!tbody) return;
 
-  tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-xs font-semibold text-slate-400">⏳ Đang tải...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-xs font-semibold text-slate-400 font-sans animate-pulse">⏳ Đang lấy toàn bộ lịch sử CSVC từ Google Sheet...</td></tr>`;
 
   try {
     const res = await fetch(API_URL, {
@@ -310,51 +310,43 @@ async function loadAllCsvcHistory() {
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "GET_ALL_CSVC_HISTORY" })
     });
+
+    const text = await res.text();
+    const result = JSON.parse(text);
     
-    const result = JSON.parse(await res.text());
-
-    if (result.success && result.data && result.data.length > 0) {
-      tbody.innerHTML = result.data.map(item => {
-        const typeBadge = item.type === "LOCATION" 
-          ? `<span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-indigo-200">📍 Địa Điểm</span>`
-          : `<span class="bg-purple-100 text-purple-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-purple-200">🚐 Xe Ra/Vào</span>`;
-
-        const status = String(item.status || "PENDING").toUpperCase();
-        let statusBadge = `<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2.5 py-1 rounded-full border border-amber-200 whitespace-nowrap">📋 Chờ Duyệt</span>`;
-        if (status === "APPROVED") statusBadge = `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-1 rounded-full border border-emerald-200 whitespace-nowrap">✅ Đã Duyệt</span>`;
-        if (status === "REJECTED") statusBadge = `<span class="bg-rose-100 text-rose-800 text-[10px] font-bold px-2.5 py-1 rounded-full border border-rose-200 whitespace-nowrap" title="Lý do: ${item.rejectReason || 'Không có'}">❌ Từ Chối</span>`;
-
-        let tStart = item.startTime;
-        let tEnd = item.endTime;
-        try { if(new Date(item.startTime).getTime()) tStart = new Date(item.startTime).toLocaleString('vi-VN'); } catch(e){}
-        try { if(new Date(item.endTime).getTime()) tEnd = new Date(item.endTime).toLocaleString('vi-VN'); } catch(e){}
-
-        return `
-          <tr class="border-b hover:bg-slate-50 text-xs transition align-middle">
-            <td class="p-3 font-extrabold text-blue-900 whitespace-nowrap">${item.id}</td>
-            <td class="p-3 font-bold text-slate-800 min-w-[150px]">${item.donVi} <br>${typeBadge}</td>
-            <td class="p-3 text-slate-700 whitespace-nowrap">
-              <div class="font-bold">${item.name}</div>
-              <div class="text-[10px] text-slate-400">📞 ${item.phone}</div>
-            </td>
-            <td class="p-3 font-medium text-slate-800 min-w-[200px]">
-              <div><b>Mục đích:</b> ${item.targetName}</div>
-              <div class="text-[10px] text-slate-500">Mô tả: ${item.reason}</div>
-              ${status === "REJECTED" && item.rejectReason ? `<div class="text-[10px] text-rose-600 font-bold mt-1">Lý do từ chối: ${item.rejectReason}</div>` : ''}
-            </td>
-            <td class="p-3 text-slate-600 font-semibold whitespace-nowrap">${tStart}<br>➔ ${tEnd}</td>
-            <td class="p-3 whitespace-nowrap">${statusBadge}</td>
-          </tr>
-        `;
-      }).join('');
-    } else {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-xs text-slate-400">Chưa có lịch sử đơn CSVC nào trong hệ thống.</td></tr>`;
+    if (!result.success || !result.data || result.data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-xs font-semibold text-slate-400 font-sans tracking-wide">Chưa có đơn vị đăng ký.</td></tr>`;
+      return;
     }
-  } catch (e) {
-    console.error("Lỗi tải lịch sử đơn CSVC:", e);
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-xs text-red-500">❌ Lỗi kết nối máy chủ!</td></tr>`;
+
+    let html = "";
+    result.data.forEach(item => {
+      const status = String(item.status || "PENDING").toUpperCase();
+      let badgeStatus = `<span class="px-2.5 py-1 bg-amber-100 text-amber-800 font-bold rounded-full text-[10px] border border-amber-200">⏳ Chờ duyệt</span>`;
+      if (status === "APPROVED") badgeStatus = `<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-full text-[10px] border border-emerald-200">✅ Đã duyệt</span>`;
+      if (status === "REJECTED") badgeStatus = `<span class="px-2.5 py-1 bg-rose-100 text-rose-800 font-bold rounded-full text-[10px] border border-rose-200">❌ Từ chối</span>`;
+
+      const nguoiTruc = item.name ? `${item.name} (${item.phone || ''})` : 'Chưa rõ';
+
+      html += `
+        <tr class="border-b border-slate-100 hover:bg-slate-50 transition align-middle text-xs font-sans">
+          <td class="p-3 font-mono font-extrabold text-blue-900 whitespace-nowrap">${item.id || 'N/A'}</td>
+          <td class="p-3 font-bold text-slate-800 min-w-[140px]">${item.donVi || 'Chưa rõ'}</td>
+          <td class="p-3 text-slate-700 whitespace-nowrap">${nguoiTruc}</td>
+          <td class="p-3 text-slate-700 font-semibold min-w-[180px]">${item.targetName || item.reason || 'N/A'}</td>
+          <td class="p-3 text-slate-600 whitespace-nowrap">${item.startTime || '-'} ➔ ${item.endTime || '-'}</td>
+          <td class="p-3 whitespace-nowrap">${badgeStatus}</td>
+        </tr>`;
+    });
+
+    tbody.innerHTML = html;
+
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-xs font-semibold text-rose-500 font-sans">❌ Lỗi kết nối Google Sheet!</td></tr>`;
   }
 }
+
+window.loadAllCsvcHistory = loadAllCsvcHistory;
 
 // Gán biến toàn cục
 window.approveCsvcOrder = approveCsvcOrder;

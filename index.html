@@ -20,6 +20,10 @@
 
   <!-- CSS Tinh Chỉnh FullCalendar -->
   <style>
+    *, ::before, ::after {
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+
     .fc {
       --fc-border-color: #f1f5f9 !important;
       --fc-button-bg-color: #f8fafc !important;
@@ -32,6 +36,7 @@
       --fc-today-bg-color: #e0f2fe !important;
       font-family: inherit !important;
     }
+
     .fc .fc-toolbar-title {
       font-size: 0.95rem !important;
       font-weight: 800 !important;
@@ -103,6 +108,11 @@
       border: none !important;
       font-weight: bold !important;
     }
+    /* Thêm hiệu ứng phản hồi nút bấm (Visual feedback) */
+    button:active, a:active {
+      transform: scale(0.96) !important;
+      opacity: 0.9 !important;
+    }
   </style>
 </head>
 <body class="bg-slate-100/90 min-h-screen flex flex-col font-sans overflow-x-hidden text-slate-800">
@@ -122,7 +132,7 @@
 
       <div id="header-user-zone" class="hidden relative">
         <button onclick="toggleUserMenu()" class="flex items-center gap-2 px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-2xl border border-white/30 shadow-sm cursor-pointer transition backdrop-blur-md">
-          <div class="w-7 h-7 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center text-xs font-black shadow-inner"><img src="link_anh_avatar.png" class="w-full h-full rounded-full object-cover"></div>
+          <div class="w-7 h-7 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center text-xs font-black shadow-inner"><img src="https://ui-avatars.com/api/?name=UMP&background=0D8ABC&color=fff" class="w-full h-full rounded-full object-cover"></div>
           
           <div class="flex items-center gap-1.5">
             <span id="nav-user-name" class="text-xs font-extrabold">Tài khoản</span>
@@ -153,27 +163,27 @@
   <!-- MAIN CONTENT CONTAINER -->
   <div class="flex-grow flex max-w-[1600px] w-full mx-auto">
     
-    <!-- FORM ĐĂNG NHẬP -->
+    <!-- FORM ĐĂNG NHẬP (Hỗ trợ nhấn Enter) -->
     <div id="login-card" class="w-full max-w-md bg-white p-8 rounded-3xl shadow-2xl border border-slate-200 mx-auto my-auto mt-12">
       <div class="text-center mb-6">
         <h2 class="text-2xl font-black text-[#1e3a8a]">ĐĂNG NHẬP</h2>
         <p class="text-xs text-slate-500 mt-1"> Vui lòng đăng nhập theo tài khoản được cấp </p>
       </div>
 
-      <div class="space-y-4">
+      <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Tên đăng nhập</label>
-          <input type="text" id="username" placeholder="Nhập tên đăng nhập..." class="w-full p-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+          <input type="text" id="username" required placeholder="Nhập tên đăng nhập..." class="w-full p-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Mật khẩu</label>
-          <input type="password" id="password" placeholder="Nhập mật khẩu..." class="w-full p-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+          <input type="password" id="password" required placeholder="Nhập mật khẩu..." class="w-full p-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
         </div>
-        <button onclick="handleLogin()" id="btn-login" class="w-full bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] hover:opacity-95 text-white font-bold py-2.5 rounded-xl shadow-md transition cursor-pointer">
+        <button type="submit" id="btn-login" class="w-full bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] hover:opacity-95 text-white font-bold py-2.5 rounded-xl shadow-md transition cursor-pointer">
           Đăng Nhập
         </button>
         <p id="login-msg" class="text-center text-xs font-semibold mt-2 min-h-[18px]"></p>
-      </div>
+      </form>
     </div>
 
     <!-- DASHBOARD CHÍNH -->
@@ -196,8 +206,8 @@
               <button onclick="switchTab('pos')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Đăng ký vật phẩm </button>
               <button onclick="switchTab('history')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Lịch sử đơn </button>
               
-              <!-- ĐỔI SBTN-ADMIN THÀNH MENU-BAN-GIAO ĐỂ ĐIỀU KHIỂN RIÊNG -->
-              <button onclick="switchTab('admin')" id="menu-ban-giao" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 font-bold transition">• Bàn giao và thu hồi</button>
+              <!-- MENU BÀN GIAO: BỊ ẨN NẾU LÀ TÀI KHOẢN NGOÀI -->
+              <button onclick="switchTab('admin')" id="menu-ban-giao" class="hidden w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 font-bold transition">• Bàn giao và thu hồi</button>
             </div>
           </div>
 
@@ -223,7 +233,7 @@
               <button onclick="switchCtvSub('ctv-subtab-schedule')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Đăng ký lịch trực</button>
               <button onclick="switchCtvSub('ctv-subtab-checkin')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Điểm danh</button>
               <button onclick="switchCtvSub('ctv-subtab-events')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Đăng ký hoạt động</button>
-              <button id="sbtn-ctv-progress" onclick="switchCtvSub('ctv-subtab-progress')" class="w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Đánh giá tiêu chí</button>
+              <button id="sbtn-ctv-progress" onclick="switchCtvSub('ctv-subtab-progress')" class="hidden w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 transition">• Đánh giá tiêu chí</button>
               <button id="sbtn-ctv-admin" onclick="switchCtvSub('ctv-subtab-admin')" class="hidden w-full text-left px-2.5 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-900 font-bold transition">• Xếp loại CTV</button>
             </div>
           </div>
@@ -518,13 +528,33 @@
         <!-- MODULE 3: CỘNG TÁC VIÊN (CTV) & QUẢN TRỊ VIÊN (QTV) -->
         <div id="module-ctv" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5">
           
-          <!-- SUBTAB 3.1: LỊCH TRỰC TUẦN -->
-          <div id="ctv-subtab-schedule" class="space-y-6">
-            <div class="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/60">
-              <h3 class="text-xs font-extrabold text-slate-800 uppercase mb-3 flex items-center gap-2">
-                📋 ĐĂNG KÝ LỊCH TRỰC THEO TUẦN
-              </h3>
-              <div id="scheduleContainer" class="overflow-x-auto min-h-[300px]"></div>
+          <!-- SUBTAB 3.1: LỊCH TRỰC THEO DẠNG LỊCH THÁNG (FULLCALENDAR + PICKER CA CỐ ĐỊNH) -->
+          <div id="ctv-subtab-schedule" class="space-y-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5">
+              <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
+                <div>
+                  <h2 class="text-sm font-extrabold text-slate-800">📅 LỊCH TRỰC CỘNG TÁC VIÊN</h2>
+                  <p class="text-xs text-slate-500 mt-0.5">👈 Click chọn ngày bất kỳ trên Lịch để mở danh sách chọn ca trực cố định</p>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <!-- NÚT CẤU HÌNH CỦA QTV -->
+                  <button id="btn-qtv-config-schedule" onclick="openConfigScheduleModal()" class="hidden px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold rounded-xl shadow transition cursor-pointer">
+                    ⚙️ Cấu Hình Mở Lịch Trực
+                  </button>
+                  <button onclick="loadAllWeeklySchedules()" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
+                    🔄 Tải Lại Lịch
+                  </button>
+                </div>
+              </div>
+
+              <!-- BANNER HIỂN THỊ KHOẢNG NGÀY ĐĂNG KÝ -->
+              <div id="schedule-open-banner" class="mb-3 p-2.5 bg-blue-50 border border-blue-200 text-blue-900 rounded-xl text-xs font-bold flex items-center justify-between">
+                <span>📢 Hạn mở đăng ký ca trực: <span id="open-date-range-label" class="font-black text-blue-700">Đang tải...</span></span>
+              </div>
+
+              <!-- KHUNG LỊCH FULLCALENDAR -->
+              <div id="ctv-calendar-container" class="min-h-[550px]"></div>
             </div>
           </div>
 
@@ -539,15 +569,13 @@
             <div id="ctv-events-list"></div>
           </div>
 
+          <!-- SUBTAB 3.3: ĐIỂM DANH -->
           <div id="ctv-subtab-checkin" class="hidden">
-
-            <!-- 1. GIAO DIỆN QUÉT QR DÀNH CHO CTV -->
             <div id="ctv-scanner-container">
               <div id="box-ctv-scan" class="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 text-center max-w-xl mx-auto space-y-4">
                 <h4 class="font-bold text-xs text-slate-800 uppercase">📷 QUÉT MÃ QR ĐIỂM DANH CA TRỰC</h4>
                 <p class="text-[11px] text-slate-500">Chọn loại điểm danh và hướng Camera vào Mã QR tại Văn phòng.</p>
 
-                <!-- Nút chọn VÀO CA / RA CA -->
                 <div class="flex justify-center gap-3 my-2">
                   <label class="flex items-center gap-1.5 px-4 py-2 bg-white rounded-xl border border-blue-200 cursor-pointer shadow-sm">
                     <input type="radio" name="checkin_type" value="IN" checked class="w-4 h-4 text-blue-600">
@@ -560,7 +588,6 @@
                 </div>
 
                 <div id="qr-reader" class="w-full max-w-xs mx-auto bg-white rounded-xl overflow-hidden border"></div>
-
                 <div id="checkin-result-msg" class="hidden p-3 rounded-xl text-xs font-bold"></div>
 
                 <button onclick="startScanner()" class="px-6 py-2.5 bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] hover:opacity-95 text-white font-bold rounded-xl text-xs uppercase shadow transition cursor-pointer">
@@ -569,28 +596,19 @@
               </div>
             </div>
 
-            <!-- 2. GIAO DIỆN BẢNG THEO DÕI DÀNH CHO QTV -->
             <div id="qtv-checkin-log-container" class="hidden max-w-4xl mx-auto">
               <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
-                
-                <!-- HEADER & BỘ LỌC NGÀY -->
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-100">
                   <div>
-                    <h2 class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
-                      <span>📋</span> NHẬT KÝ ĐIỂM DANH TRONG NGÀY
-                    </h2>
+                    <h2 class="text-sm font-extrabold text-slate-800 flex items-center gap-2"><span>📋</span> NHẬT KÝ ĐIỂM DANH TRONG NGÀY</h2>
                     <p class="text-xs text-slate-500 mt-0.5">Danh sách CTV Check-in / Check-out thành công</p>
                   </div>
-
                   <div class="flex items-center gap-2">
                     <input type="date" id="qtv-filter-date" class="px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="loadQtvCheckinLogs()">
-                    <button onclick="loadQtvCheckinLogs()" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition cursor-pointer">
-                      🔄 Tải lại
-                    </button>
+                    <button onclick="loadQtvCheckinLogs()" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition cursor-pointer">🔄 Tải lại</button>
                   </div>
                 </div>
 
-                <!-- BẢNG THỐNG KÊ -->
                 <div class="grid grid-cols-3 gap-3 mb-4">
                   <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
                     <span class="text-[10px] font-bold text-slate-500 uppercase">Tổng lượt</span>
@@ -606,7 +624,6 @@
                   </div>
                 </div>
 
-                <!-- BẢNG HIỂN THỊ DỮ LIỆU -->
                 <div class="overflow-x-auto rounded-xl border border-slate-200">
                   <table class="w-full text-left border-collapse text-xs">
                     <thead>
@@ -619,19 +636,15 @@
                       </tr>
                     </thead>
                     <tbody id="qtv-checkin-table-body">
-                      <tr>
-                        <td colspan="5" class="p-5 text-center text-slate-400">Đang tải dữ liệu điểm danh...</td>
-                      </tr>
+                      <tr><td colspan="5" class="p-5 text-center text-slate-400">Đang tải dữ liệu điểm danh...</td></tr>
                     </tbody>
                   </table>
                 </div>
-
               </div>
             </div>
-
           </div>
 
-          <!-- SUBTAB 3.4: TIẾN ĐỘ & XẾP LOẠI (DÀNH CHO CTV) -->
+          <!-- SUBTAB 3.4: ĐÁNH GIÁ TIÊU CHÍ (DÀNH CHO CTV) -->
           <div id="ctv-subtab-progress" class="hidden space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 flex items-center gap-6">
@@ -691,64 +704,147 @@
     </div>
   </div>
 
-  <!-- FOOTER CHÍNH THỨC -->
-  <footer class="w-full bg-slate-100/90 border-t border-slate-200/60 py-3 mt-auto">
-    <div class="max-w-[1600px] mx-auto px-4 text-center">
-      <p class="text-xs font-bold text-slate-700 tracking-wide uppercase">
-        © 2026 VĂN PHÒNG ĐOÀN THANH NIÊN - HỘI SINH VIÊN ĐẠI HỌC Y DƯỢC TP. HỒ CHÍ MINH
-      </p>
-      <p class="text-[11px] italic text-slate-400 mt-0.5">
-        The website was developed by NTCL team
-      </p>
-    </div>
-  </footer>
-
-  <!-- MODALS POPUP -->
-  <div id="modal-ctv-profile" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-white p-6 rounded-3xl shadow-2xl max-w-lg w-full space-y-4 border border-slate-100 relative max-h-[90vh] overflow-y-auto">
-      <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+  <!-- MODAL ĐĂNG KÝ CA TRỰC KHI CLICK CHỌN NGÀY TRÊN LỊCH THÁNG -->
+  <div id="modal-register-shift" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-3xl shadow-2xl max-w-md w-full space-y-4 border border-slate-100 relative">
+      <button onclick="closeRegisterShiftModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+      
       <div class="border-b pb-3">
-        <h3 class="font-extrabold text-slate-800 text-sm uppercase">📝 THÔNG TIN</h3>
-        <p class="text-xs text-slate-500 mt-0.5">Vui lòng cập nhật đầy đủ thông tin!</p>
+        <h3 class="font-extrabold text-slate-800 text-sm uppercase">📋 ĐĂNG KÝ CA TRỰC VĂN PHÒNG</h3>
+        <p class="text-xs text-blue-900 font-extrabold mt-1" id="shift-modal-date-label">Ngày chọn: --/--/----</p>
       </div>
-      <form onsubmit="submitCtvProfile(event)" class="space-y-3 text-xs">
-        <div><label class="block font-bold text-slate-700 mb-1">Họ và tên *</label><input type="text" id="prof-fullname" required placeholder="Nguyễn Văn A" class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block font-bold text-slate-700 mb-1">Mã số sinh viên *</label><input type="text" id="prof-mssv" required placeholder="SV2026..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></div>
-          <div><label class="block font-bold text-slate-700 mb-1">Ngày sinh *</label><input type="date" id="prof-dob" required class="w-full p-2.5 border rounded-xl bg-slate-50 font-bold outline-none"></div>
+
+      <form onsubmit="submitWeeklySchedule(event)" class="space-y-4 text-xs">
+        <input type="hidden" id="shift-date">
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-2">Chọn ca trực muốn đăng ký *</label>
+          <div id="shift-slots-container" class="space-y-2 max-h-52 overflow-y-auto pr-1">
+            <!-- Render danh sách Ca cố định qua JS -->
+          </div>
         </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block font-bold text-slate-700 mb-1">Trường/Khoa *</label><input type="text" id="prof-school" placeholder="ĐH Y Dược TP.HCM" class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></div>
-          <div><label class="block font-bold text-slate-700 mb-1">Lớp *</label><input type="text" id="prof-class" placeholder="Y2023..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Ghi chú (nếu có)</label>
+          <input type="text" id="shift-note" placeholder="Nhập ghi chú cá nhân..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none">
         </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block font-bold text-slate-700 mb-1">Số điện thoại *</label><input type="tel" id="prof-phone" required class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></div>
-          <div><label class="block font-bold text-slate-700 mb-1">Thông tin người thân (SĐT) *</label><input type="text" id="prof-relative" placeholder="Phụ huynh: 090..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></div>
-        </div>
-        <div><label class="block font-bold text-slate-700 mb-1">Địa chỉ *</label><input type="text" id="prof-address" placeholder="Nhập địa chỉ chi tiết..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></div>
+
         <div class="pt-2 flex gap-2">
-          <button type="button" onclick="closeProfileModal()" class="w-1/2 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl">Hủy</button>
-          <button type="submit" class="w-1/2 py-2.5 bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] text-white font-bold rounded-xl shadow">Lưu Hồ Sơ</button>
+          <button type="button" onclick="closeRegisterShiftModal()" class="w-1/2 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl">Hủy</button>
+          <button type="submit" id="btn-submit-shift" class="w-1/2 py-2.5 bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] text-white font-bold rounded-xl shadow cursor-pointer">Xác Nhận Đăng Ký</button>
         </div>
       </form>
     </div>
   </div>
 
+  <!-- POPUP DÀNH CHO QTV: THIẾT LẬP KHOẢNG NGÀY MỞ ĐĂNG KÝ -->
+  <div id="modal-config-schedule" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-3xl shadow-2xl max-w-md w-full space-y-4 border border-slate-100 relative">
+      <button onclick="closeConfigScheduleModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+
+      <div class="border-b pb-3">
+        <h3 class="font-extrabold text-slate-800 text-sm uppercase">⚙️ THIẾT LẬP KHOẢNG NGÀY MỞ LỊCH TRỰC</h3>
+        <p class="text-xs text-slate-500 mt-1">CTV chỉ được đăng ký các ca trực nằm trong khoảng ngày này.</p>
+      </div>
+
+      <form onsubmit="submitConfigScheduleRange(event)" class="space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Mở từ ngày *</label>
+            <input type="date" id="cfg-open-start" required class="w-full p-2.5 border rounded-xl bg-slate-50 font-bold outline-none">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Đến hết ngày *</label>
+            <input type="date" id="cfg-open-end" required class="w-full p-2.5 border rounded-xl bg-slate-50 font-bold outline-none">
+          </div>
+        </div>
+
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="closeConfigScheduleModal()" class="w-1/2 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl">Hủy</button>
+          <button type="submit" class="w-1/2 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold rounded-xl shadow cursor-pointer">Lưu Cấu Hình</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- POPUP CẬP NHẬT HO SƠ CÁ NHÂN -->
+  <div id="modal-ctv-profile" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-3xl shadow-2xl max-w-lg w-full space-y-4 border border-slate-100 relative max-h-[90vh] overflow-y-auto">
+      <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+      <div class="border-b pb-3">
+        <h3 class="font-extrabold text-slate-800 text-sm uppercase">📝 THÔNG TIN CÁ NHÂN</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Vui lòng cập nhật đầy đủ thông tin!</p>
+      </div>
+      <form onsubmit="submitCtvProfile(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Họ và tên *</label>
+          <input type="text" id="prof-fullname" required placeholder="Nguyễn Văn A" class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Mã số sinh viên *</label>
+            <input type="text" id="prof-mssv" required placeholder="SV2026..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Ngày sinh *</label>
+            <input type="date" id="prof-dob" required class="w-full p-2.5 border rounded-xl bg-slate-50 font-bold outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Trường/Khoa *</label>
+            <input type="text" id="prof-school" placeholder="ĐH Y Dược TP.HCM" class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Lớp *</label>
+            <input type="text" id="prof-class" placeholder="Y2023..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Số điện thoại *</label>
+            <input type="tel" id="prof-phone" required class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Thông tin người thân (SĐT) *</label>
+            <input type="text" id="prof-relative" placeholder="Phụ huynh: 090..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Địa chỉ *</label>
+          <input type="text" id="prof-address" placeholder="Nhập địa chỉ chi tiết..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none">
+        </div>
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="closeProfileModal()" class="w-1/2 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl">Hủy</button>
+          <button type="submit" class="w-1/2 py-2.5 bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] text-white font-bold rounded-xl shadow cursor-pointer">Lưu Hồ Sơ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- POPUP ĐỔI MẬT KHẨU -->
   <div id="modal-change-pass" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <div class="bg-white p-6 rounded-3xl shadow-2xl max-w-sm w-full space-y-4 border border-slate-100 relative">
       <button onclick="closeChangePassModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
       <div class="border-b pb-2"><h3 class="font-extrabold text-slate-800 text-sm uppercase">🔑 ĐỔI MẬT KHẨU TÀI KHOẢN</h3></div>
       <form onsubmit="submitChangePassword(event)" class="space-y-3 text-xs">
-        <div><label class="block font-bold text-slate-700 mb-1">Mật khẩu cũ *</label><input type="password" id="pass-old" required class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></div>
-        <div><label class="block font-bold text-slate-700 mb-1">Mật khẩu mới *</label><input type="password" id="pass-new" required class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none"></div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Mật khẩu cũ *</label>
+          <input type="password" id="pass-old" required class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Mật khẩu mới *</label>
+          <input type="password" id="pass-new" required class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none">
+        </div>
         <div class="pt-2 flex gap-2">
           <button type="button" onclick="closeChangePassModal()" class="w-1/2 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl">Hủy</button>
-          <button type="submit" class="w-1/2 py-2.5 bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] text-white font-bold rounded-xl shadow">Xác Nhận</button>
+          <button type="submit" class="w-1/2 py-2.5 bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] text-white font-bold rounded-xl shadow cursor-pointer">Xác Nhận</button>
         </div>
       </form>
     </div>
   </div>
 
+  <!-- POPUP DANH SÁCH CTV ĐĂNG KÝ SỰ KIỆN -->
   <div id="modal-ctv-list" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-6 relative max-h-[85vh] flex flex-col border border-slate-100">
       <button onclick="closeCtvListModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
@@ -775,6 +871,7 @@
     </div>
   </div>
 
+  <!-- POPUP ĐĂNG KÝ HOẠT ĐỘNG -->
   <div id="modal-program-register" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <div class="bg-white p-6 rounded-3xl shadow-2xl max-w-md w-full space-y-4 border border-slate-100 relative">
       <button onclick="closeProgramRegisterModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
@@ -802,18 +899,15 @@
     </div>
   </div>
 
+  <!-- POPUP TẠO CHƯƠNG TRÌNH MỚI (DÀNH CHO QTV) -->
   <div id="modal-create-program" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <div class="bg-white p-6 rounded-3xl shadow-2xl max-w-lg w-full space-y-4 border border-slate-100 relative max-h-[90vh] overflow-y-auto">
       <button onclick="closeCreateProgramModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
       <div class="border-b pb-3">
-        <h3 class="font-extrabold text-slate-800 text-sm uppercase">➕ TẠO CHƯƠNG TRÌNH / TUYỂN CTV MỚI</h3>
-        <p class="text-xs text-slate-500 mt-0.5">Tự động lưu dữ liệu vào tab ChuongTrinh_Recruit trên Google Sheet</p>
+        <h3 class="font-extrabold text-slate-800 text-sm uppercase">➕ THÊM CHƯƠNG TRÌNH/HOẠT ĐỘNG MỚI</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Điền thông tin hoạt động và bấm Xác nhận để tạo.</p>
       </div>
       <form onsubmit="submitCreateProgram(event)" class="space-y-3 text-xs">
-        <div>
-          <label class="block font-bold text-slate-700 mb-1">Mã chương trình *</label>
-          <input type="text" id="prog-id" required placeholder="CT_SUMMER_2026..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none">
-        </div>
         <div>
           <label class="block font-bold text-slate-700 mb-1">Tên chương trình *</label>
           <input type="text" id="prog-name" required placeholder="Tập huấn Kỹ năng Mùa Hè Xanh..." class="w-full p-2.5 border rounded-xl bg-slate-50 outline-none">
@@ -841,12 +935,13 @@
         </div>
         <div class="pt-2 flex gap-2">
           <button type="button" onclick="closeCreateProgramModal()" class="w-1/2 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl">Hủy</button>
-          <button type="submit" id="btn-submit-create-prog" class="w-1/2 py-2.5 bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] text-white font-bold rounded-xl shadow">Xác Nhận Tạo</button>
+          <button type="submit" id="btn-submit-create-prog" class="w-1/2 py-2.5 bg-gradient-to-r from-[#1e3a8a] to-[#0284c7] text-white font-bold rounded-xl shadow cursor-pointer">Xác Nhận Tạo</button>
         </div>
       </form>
     </div>
   </div>
 
+  <!-- MODAL BÀN DUYỆT HOẶC XEM CHI TIẾT -->
   <div id="adminModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 border border-slate-100 relative">
       <button onclick="document.getElementById('adminModal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
@@ -874,80 +969,57 @@
     function openChangePassModal() { document.getElementById("modal-change-pass")?.classList.remove("hidden"); }
     function closeChangePassModal() { document.getElementById("modal-change-pass")?.classList.add("hidden"); }
 
-    function checkBirthdayStatus(dobString) {
-      if (!dobString) return;
-      const today = new Date();
-      const dob = new Date(dobString);
-      if (today.getDate() === dob.getDate() && today.getMonth() === dob.getMonth()) {
-        document.getElementById("birthday-badge")?.classList.remove("hidden");
-      }
-    }
-
     function switchCtvSub(subName) {
       switchTab('ctv_module');
-      if (typeof switchCtvSubTab === "function") {
-        switchCtvSubTab(subName);
-      } else if (typeof switchCtvTab === "function") {
-        switchCtvTab(subName);
-      } else if (typeof showCtvSubTab === "function") {
-        showCtvSubTab(subName);
-      }
+      if (typeof switchCtvSubTab === "function") switchCtvSubTab(subName);
     }
     window.switchCtvSub = switchCtvSub;
 
+    // CHÍNH SÁCH PHÂN QUYỀN HIỂN THỊ CHUẨN CHO QTV & EXTERNAL_USERS
     function applyUserRolePermissions() {
       const user = window.currentUser || {}; 
       const userRole = String(user.role || "").trim().toUpperCase();
+      const userType = String(user.userType || "").trim().toUpperCase();
+
       const isQtv = (userRole === 'QTV' || userRole === 'ADMIN' || userRole === 'QUẢN TRỊ VIÊN');
-      const isCtv = (userRole === 'CTV' || userRole === 'CỘNG TÁC VIÊN');
+      const isExternal = (userType === 'EXTERNAL' || userRole === 'DONVI' || userRole === 'ĐƠN VỊ');
 
-      const sbtnProgress = document.getElementById("sbtn-ctv-progress"); // Tab "Đánh giá tiêu chí" của CTV
-      const sbtnAdmin = document.getElementById("sbtn-ctv-admin");       // Tab "Xếp loại CTV" của QTV
-      const menuBanGiao = document.getElementById("menu-ban-giao"); 
+      const sbtnProgress = document.getElementById("sbtn-ctv-progress");
+      const sbtnAdmin = document.getElementById("sbtn-ctv-admin");
       const btnAddProgram = document.getElementById("btn-qtv-add-program"); 
-      const grpMenuCtv = document.getElementById("grp-menu-ctv");
+      const btnConfigSchedule = document.getElementById("btn-qtv-config-schedule");
+      const menuBanGiao = document.getElementById("menu-ban-giao");
 
+      // 1. Phân quyền hiển thị Menu Bàn giao & thu hồi vật phẩm
+      if (menuBanGiao) {
+        if (isExternal) {
+          menuBanGiao.classList.add("hidden"); // Tài khoản ngoài KHÔNG thấy
+        } else if (isQtv) {
+          menuBanGiao.classList.remove("hidden"); // QTV/ADMIN THẤY
+        }
+      }
+
+      // 2. Phân quyền các nút quản trị CTV
       if (isQtv) {
-        // 👑 QTV: Ẩn tiến độ cá nhân của CTV, HIỆN tab Xếp loại CTV và nút Tạo chương trình
         if (sbtnProgress) sbtnProgress.classList.add("hidden");
         if (sbtnAdmin) sbtnAdmin.classList.remove("hidden");       
         if (btnAddProgram) btnAddProgram.classList.remove("hidden");
-      } else if (isCtv) {
-        // 👤 CTV: HIỆN tiến độ cá nhân, ẨN tab Xếp loại quản trị và nút Tạo chương trình
+        if (btnConfigSchedule) btnConfigSchedule.classList.remove("hidden");
+      } else {
         if (sbtnProgress) sbtnProgress.classList.remove("hidden");
         if (sbtnAdmin) sbtnAdmin.classList.add("hidden");          
-        if (btnAddProgram) btnAddProgram.classList.add("hidden");    
-      } else {
-        // 🌐 Tài khoản ngoài: Ẩn cả hai
-        if (sbtnProgress) sbtnProgress.classList.add("hidden");
-        if (sbtnAdmin) sbtnAdmin.classList.add("hidden");
-        if (btnAddProgram) btnAddProgram.classList.add("hidden");
-      }
-
-      if (grpMenuCtv) grpMenuCtv.classList.remove("hidden");
-
-      const isQtvOrCtv = isQtv || isCtv;
-      if (menuBanGiao) {
-        if (isQtvOrCtv) {
-          menuBanGiao.classList.remove("hidden");
-        } else {
-          menuBanGiao.classList.add("hidden");
-        }
+        if (btnAddProgram) btnAddProgram.classList.add("hidden"); 
+        if (btnConfigSchedule) btnConfigSchedule.classList.add("hidden");
       }
 
       if (window.currentUser) {
         document.getElementById("header-user-zone")?.classList.remove("hidden");
       }
-      if (user.dob && typeof checkBirthdayStatus === 'function') {
-        checkBirthdayStatus(user.dob);
-      }
     }
 
+    // CHUYỂN TAB VÀ TẢI LỊCH SỬ CHUẨN KHÔNG BỊ LỖI
     function switchTab(tabId) {
-      // Tự động đóng sidebar trên điện thoại sau khi bấm chọn
-      if (window.innerWidth < 1024) {
-        document.getElementById("main-sidebar")?.classList.add("hidden");
-      }
+      if (window.innerWidth < 1024) document.getElementById("main-sidebar")?.classList.add("hidden");
 
       const views = ['pos', 'history', 'admin', 'csvc-location', 'csvc-vehicle', 'csvc-duyet', 'csvc-history'];
       views.forEach(v => { document.getElementById(`view-${v}`)?.classList.add('hidden'); });
@@ -966,34 +1038,41 @@
         if (targetView) {
           targetView.classList.remove('hidden');
           
-          // 🛠️ ĐOẠN NÀY ĐẢM BẢO KHI BẤM BÀN GIAO VÀ THU HỒI SẼ GỌI ĐÚNG HÀM TẢI TẤT CẢ ĐƠN QUẢN TRỊ
-          if (targetId === 'admin') {
-            if (typeof loadAdminOrders === 'function') {
-              loadAdminOrders();
-            } else if (typeof loadAdminBorrowOrders === 'function') {
-              loadAdminBorrowOrders(); // Gọi hàm load toàn bộ đơn mượn của hệ thống
-            }
+          // SỬA LỖI TẢI LỊCH SỬ: Tự động tải lại lịch sử đơn tương ứng
+          if (targetId === 'history') {
+            if (typeof loadUserBorrowHistory === 'function') loadUserBorrowHistory();
+            else if (typeof loadBorrowHistory === 'function') loadBorrowHistory();
           }
 
-          if (targetId === 'csvc-history' && typeof loadAllCsvcHistory === 'function') loadAllCsvcHistory();
-          if (targetId === 'csvc-duyet' && typeof loadPendingCsvcOrders === 'function') loadPendingCsvcOrders();
-          if (targetId === 'history' && typeof loadUserBorrowHistory === 'function') loadUserBorrowHistory();
+          if (targetId === 'csvc-history') {
+            if (typeof loadAllCsvcHistory === 'function') loadAllCsvcHistory();
+            else if (typeof loadCsvcHistory === 'function') loadCsvcHistory();
+          }
+
+          if (targetId === 'admin') {
+            if (typeof loadAdminOrders === 'function') loadAdminOrders();
+            else if (typeof loadAdminBorrowOrders === 'function') loadAdminBorrowOrders();
+          }
+
+          if (targetId === 'csvc-duyet') {
+            if (typeof loadPendingCsvcOrders === 'function') loadPendingCsvcOrders();
+          }
         }
       }
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-      if (window.currentUser) {
-        applyUserRolePermissions();
-      }
+      if (window.currentUser) applyUserRolePermissions();
     });
-  function openCreateProgramModal() {
-      document.getElementById("modal-create-program")?.classList.remove("hidden");
-    }
 
-    function closeCreateProgramModal() {
-      document.getElementById("modal-create-program")?.classList.add("hidden");
+    function openCreateProgramModal() { document.getElementById("modal-create-program")?.classList.remove("hidden"); }
+    function closeCreateProgramModal() { document.getElementById("modal-create-program")?.classList.add("hidden"); }
+
+    function handleLoginSubmit(e) {
+      if (e) e.preventDefault();
+      if (typeof handleLogin === 'function') handleLogin();
     }
+    window.handleLoginSubmit = handleLoginSubmit;
   </script>
 </body>
 </html>

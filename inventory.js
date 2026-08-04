@@ -270,68 +270,64 @@ async function submitBorrowOrder() {
   }
 }
 
-// 8. TẢI TOÀN BỘ LỊCH SỬ ĐƠN MƯỢN (TAB LỊCH SỬ)
-// TẢI TOÀN BỘ LỊCH SỬ ĐƠN MƯỢN HẬU CẦN (HIỂN THỊ TẤT CẢ ĐƠN VỊ)
+// TẢI TOÀN BỘ LỊCH SỬ ĐƠN MƯỢN VẬT PHẨM TỪ GOOGLE SHEET (KHÔNG LỌC)
 async function loadUserBorrowHistory() {
   const tbody = document.getElementById("user-history-table");
   if (!tbody) return;
 
-  tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-xs text-slate-400">⏳ Đang tải...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-xs font-semibold text-slate-400 font-sans animate-pulse">⏳ Đang lấy toàn bộ lịch sử đơn mượn từ Google Sheet...</td></tr>`;
 
   try {
     const res = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ 
-        action: "GET_ALL_BORROW_ORDERS" // Lấy toàn bộ danh sách đơn vị mượn
-      })
+      body: JSON.stringify({ action: "GET_ALL_BORROW_ORDERS" })
     });
 
-    const result = JSON.parse(await res.text());
+    const text = await res.text();
+    const result = JSON.parse(text);
 
-    if (result.success && result.data && result.data.length > 0) {
-      tbody.innerHTML = result.data.map(item => {
-        let itemsStr = "";
-        try {
-          const items = JSON.parse(item.vatPhamRaw);
-          if (Array.isArray(items)) {
-            itemsStr = items.map(it => `<span class="inline-block bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded mr-1 mb-1 border border-slate-200"><b>${it.name || it.id}</b>: ${it.qty}</span>`).join(" ");
-          } else { itemsStr = item.vatPhamRaw; }
-        } catch(e) { itemsStr = item.vatPhamRaw || "Chưa rõ"; }
-
-        const status = String(item.trangThai || "REGISTERED").toUpperCase();
-        let statusBadge = `<span class="inline-block whitespace-nowrap px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">📋 Đã đăng ký</span>`;
-        if (status === "DELIVERED" || status === "APPROVED") {
-          statusBadge = `<span class="inline-block whitespace-nowrap px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">📦 Đã nhận</span>`;
-        } else if (status === "RETURNED") {
-          statusBadge = `<span class="inline-block whitespace-nowrap px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">🎉 Đã trả</span>`;
-        } else if (status === "REJECTED" || status === "CANCELLED") {
-          statusBadge = `<span class="inline-block whitespace-nowrap px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">❌ Hủy / Từ chối</span>`;
-        }
-
-        const tMuon = item.thoiGianMuon ? new Date(item.thoiGianMuon).toLocaleDateString('vi-VN') : 'N/A';
-        const tTra = item.thoiGianTra ? new Date(item.thoiGianTra).toLocaleDateString('vi-VN') : 'N/A';
-
-        return `
-          <tr class="border-b hover:bg-slate-50 text-xs transition align-middle">
-            <td class="p-3 font-extrabold text-blue-900 whitespace-nowrap">${item.bookingId}</td>
-            <td class="p-3 font-medium text-slate-700 min-w-[180px]">${itemsStr}</td>
-            <td class="p-3 text-slate-600 font-semibold whitespace-nowrap">${tMuon} - ${tTra}</td>
-            <td class="p-3 font-bold text-slate-800 min-w-[160px]">
-              <div>${item.donVi || 'Chưa rõ'}</div>
-              <div class="text-[10px] text-slate-400 font-normal">Người đại diện: ${item.nguoiDaiDien || 'N/A'}</div>
-            </td>
-            <td class="p-3 whitespace-nowrap">${statusBadge}</td>
-          </tr>
-        `;
-      }).join('');
-    } else {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-xs text-slate-400">Chưa có lịch sử đơn mượn nào trong hệ thống.</td></tr>`;
+    if (!result.success || !result.data || result.data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-xs font-semibold text-slate-400 font-sans tracking-wide">Chưa có đơn vị đăng ký.</td></tr>`;
+      return;
     }
-  } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-xs text-red-500">❌ Lỗi kết nối máy chủ!</td></tr>`;
+
+    let html = "";
+    result.data.forEach(item => {
+      let itemsStr = "";
+      try {
+        if (typeof item.vatPhamRaw === 'string' && item.vatPhamRaw.trim().startsWith('[')) {
+          const itemsArr = JSON.parse(item.vatPhamRaw);
+          itemsStr = itemsArr.map(it => `${it.name || it.id} (x${it.qty})`).join(', ');
+        } else {
+          itemsStr = item.vatPhamRaw || "Vật phẩm mượn";
+        }
+      } catch(e) { itemsStr = item.vatPhamRaw || "Vật phẩm mượn"; }
+
+      const status = String(item.trangThai || "REGISTERED").toUpperCase();
+      let badgeStatus = `<span class="px-2.5 py-1 bg-amber-100 text-amber-800 font-bold rounded-full text-[10px] border border-amber-200">⏳ Chờ duyệt</span>`;
+      if (status === "DELIVERED" || status === "APPROVED") badgeStatus = `<span class="px-2.5 py-1 bg-blue-100 text-blue-800 font-bold rounded-full text-[10px] border border-blue-200">📦 Đã bàn giao</span>`;
+      if (status === "RETURNED") badgeStatus = `<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-full text-[10px] border border-emerald-200">🎉 Đã trả</span>`;
+      if (status === "REJECTED" || status === "CANCELLED") badgeStatus = `<span class="px-2.5 py-1 bg-rose-100 text-rose-800 font-bold rounded-full text-[10px] border border-rose-200">❌ Từ chối</span>`;
+
+      html += `
+        <tr class="border-b border-slate-100 hover:bg-slate-50 transition align-middle text-xs font-sans">
+          <td class="p-3 font-mono font-extrabold text-blue-900">${item.bookingId || 'N/A'}</td>
+          <td class="p-3 font-bold text-slate-800 min-w-[180px]">${itemsStr}</td>
+          <td class="p-3 text-slate-600 whitespace-nowrap">${item.thoiGianMuon || '-'} ➔ ${item.thoiGianTra || '-'}</td>
+          <td class="p-3 text-slate-700 font-semibold">${item.donVi || item.nguoiDaiDien || 'Chưa rõ'}</td>
+          <td class="p-3 whitespace-nowrap">${badgeStatus}</td>
+        </tr>`;
+    });
+
+    tbody.innerHTML = html;
+
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-xs font-semibold text-rose-500 font-sans">❌ Lỗi kết nối Google Sheet: ${err.message}</td></tr>`;
   }
 }
+
+window.loadUserBorrowHistory = loadUserBorrowHistory;
 
 // 9. TẢI BẢNG BÀN GIAO / THU HỒI (CTV/QTV)
 async function loadAdminBorrowOrders() {
