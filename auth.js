@@ -62,7 +62,6 @@ async function handleLogin() {
       window.currentUser = result.user;
       localStorage.setItem("ump_user", JSON.stringify(result.user));
 
-
       if (msgEl) {
         msgEl.innerText = "🎉 Đăng nhập thành công!";
         msgEl.className = "text-center text-xs font-semibold mt-2 text-emerald-600";
@@ -75,8 +74,12 @@ async function handleLogin() {
       const navName = document.getElementById("nav-user-name");
       if (navName) navName.innerText = result.user.tenDonVi || result.user.hoTen || result.user.username;
 
-      applyRolePermissions(result.user);
       setLetterAvatar(result.user); // Hiển thị avatar chữ cái khi đăng nhập
+
+      // 🟢 GỌI HÀM PHÂN QUYỀN MỚI CỦA BẠN BÊN INDEX.HTML
+      if (typeof applyUserRolePermissions === "function") {
+        applyUserRolePermissions();
+      }
 
     } else {
       if (msgEl) {
@@ -93,33 +96,6 @@ async function handleLogin() {
     }
   } finally {
     if (btnLogin) btnLogin.disabled = false;
-  }
-}
-
-function applyRolePermissions(user) {
-  const grpCsvc = document.getElementById("grp-menu-csvc");
-  const grpCtv = document.getElementById("grp-menu-ctv");
-  const sbtnCsvcDuyet = document.getElementById("sbtn-csvc-duyet");
-  const sbtnAdmin = document.getElementById("sbtn-admin");
-
-  if (!user) return;
-
-  if (user.userType === "INTERNAL") {
-    if (grpCsvc) grpCsvc.classList.remove("hidden");
-    if (grpCtv) grpCtv.classList.remove("hidden");
-
-    if (user.role === "QTV" || user.role === "ADMIN") {
-      if (sbtnCsvcDuyet) sbtnCsvcDuyet.classList.remove("hidden");
-      if (sbtnAdmin) sbtnAdmin.classList.remove("hidden");
-    } else {
-      if (sbtnCsvcDuyet) sbtnCsvcDuyet.classList.add("hidden");
-      if (sbtnAdmin) sbtnAdmin.classList.add("hidden");
-    }
-  } else {
-    if (grpCsvc) grpCsvc.classList.remove("hidden");
-    if (grpCtv) grpCtv.classList.add("hidden");
-    if (sbtnCsvcDuyet) sbtnCsvcDuyet.classList.add("hidden");
-    if (sbtnAdmin) sbtnAdmin.classList.add("hidden");
   }
 }
 
@@ -157,17 +133,15 @@ async function handleChangePassSubmit() {
     const result = JSON.parse(await response.text());
 
     if (result.success) {
-      window.currentUser = result.user;
-      localStorage.setItem("ump_user", JSON.stringify(result.user));
-
-      // 🟢 THÊM BƯỚC 3 VÀO ĐÂY:
-      if (typeof applyUserRolePermissions === 'function') {
-        applyUserRolePermissions();
-      }
-
       if (msgEl) {
-        msgEl.innerText = "🎉 Đăng nhập thành công!";
+        msgEl.innerText = "🎉 Đổi mật khẩu thành công!";
         msgEl.className = "text-center text-xs font-semibold mt-2 text-emerald-600";
+      }
+      setTimeout(() => closeChangePassModal(), 1500);
+    } else {
+       if (msgEl) {
+        msgEl.innerText = "❌ " + (result.message || "Đổi mật khẩu thất bại!");
+        msgEl.className = "text-center text-xs font-semibold mt-2 text-rose-600";
       }
     }
   } catch (error) {
@@ -192,8 +166,12 @@ function checkAutoLogin() {
       const navName = document.getElementById("nav-user-name");
       if (navName) navName.innerText = user.tenDonVi || user.hoTen || user.username;
 
-      applyRolePermissions(user);
-      setLetterAvatar(user); // Hiển thị avatar chữ cái khi tự động đăng nhập lại
+      setLetterAvatar(user);
+
+      // 🟢 GỌI HÀM PHÂN QUYỀN MỚI CỦA BẠN BÊN INDEX.HTML LÚC AUTO LOGIN
+      if (typeof applyUserRolePermissions === "function") {
+        applyUserRolePermissions();
+      }
     } catch (e) {
       localStorage.removeItem("ump_user");
     }
@@ -212,5 +190,4 @@ document.addEventListener("DOMContentLoaded", function() {
 
 window.handleLogin = handleLogin;
 window.handleChangePassSubmit = handleChangePassSubmit;
-window.applyRolePermissions = applyRolePermissions;
 window.logout = logout;
