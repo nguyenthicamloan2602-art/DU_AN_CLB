@@ -62,6 +62,7 @@ async function handleLogin() {
       window.currentUser = result.user;
       localStorage.setItem("ump_user", JSON.stringify(result.user));
 
+
       if (msgEl) {
         msgEl.innerText = "🎉 Đăng nhập thành công!";
         msgEl.className = "text-center text-xs font-semibold mt-2 text-emerald-600";
@@ -156,17 +157,17 @@ async function handleChangePassSubmit() {
     const result = JSON.parse(await response.text());
 
     if (result.success) {
-      if (msgEl) {
-        msgEl.innerText = "🎉 " + result.message;
-        msgEl.className = "text-center text-xs font-semibold mt-1 text-emerald-600";
+      window.currentUser = result.user;
+      localStorage.setItem("ump_user", JSON.stringify(result.user));
+
+      // 🟢 THÊM BƯỚC 3 VÀO ĐÂY:
+      if (typeof applyUserRolePermissions === 'function') {
+        applyUserRolePermissions();
       }
-      setTimeout(() => {
-        if (typeof closeChangePassModal === "function") closeChangePassModal();
-      }, 1200);
-    } else {
+
       if (msgEl) {
-        msgEl.innerText = "❌ " + result.message;
-        msgEl.className = "text-center text-xs font-semibold mt-1 text-rose-600";
+        msgEl.innerText = "🎉 Đăng nhập thành công!";
+        msgEl.className = "text-center text-xs font-semibold mt-2 text-emerald-600";
       }
     }
   } catch (error) {

@@ -980,85 +980,98 @@
     }
     window.switchCtvSub = switchCtvSub;
 
-    // PHÂN QUYỀN KHÓA CỨNG: CHỈ ADMIN MỚI ĐƯỢC THẤY NÚT TẠO CHƯƠNG TRÌNH MỚI
+    // =========================================================================
+    // 🟢 HÀM PHÂN QUYỀN CHUẨN XÁC (ĐỌC ĐÚNG KEY "ump_user")
+    // =========================================================================
     function applyUserRolePermissions() {
-    const user = window.currentUser || {}; 
-    const role = String(user.role || "").trim().toUpperCase();
-    const userType = String(user.userType || "").trim().toUpperCase();
+      let user = window.currentUser;
 
-    // 1. Mở rộng nhận diện ADMIN (Bắt thêm QTV, SUPERADMIN...)
-    const IS_ADMIN = (
-      role.includes('ADMIN') || 
-      role.includes('QUẢN TRỊ') || 
-      role.includes('QTV')
-    );
-    
-    // 2. Nhận diện ĐƠN VỊ NGOÀI
-    const IS_EXTERNAL = !IS_ADMIN && (
-      userType === 'EXTERNAL' || 
-      role.includes('DONVI') || 
-      role.includes('ĐƠN VỊ')
-    );
-    
-    // 3. Nhận diện CỘNG TÁC VIÊN (CTV)
-    const IS_CTV = !IS_ADMIN && !IS_EXTERNAL;
+      // Đọc đúng key "ump_user" từ localStorage / sessionStorage
+      if (!user || (!user.role && !user.userType)) {
+        try {
+          const stored = localStorage.getItem("ump_user") || sessionStorage.getItem("ump_user") || localStorage.getItem("user");
+          if (stored) {
+            user = JSON.parse(stored);
+            window.currentUser = user; // Đồng bộ lại biến toàn cục ngay lập tức
+          }
+        } catch (e) {
+          user = {};
+        }
+      }
 
-    // Lấy các element giao diện
-    const menuBanGiao = document.getElementById("menu-ban-giao");
-    const sbtnProgress = document.getElementById("sbtn-ctv-progress");
-    const sbtnAdmin = document.getElementById("sbtn-ctv-admin");
-    const btnAddProgram = document.getElementById("btn-qtv-add-program");
-    const btnConfigSchedule = document.getElementById("btn-qtv-config-schedule");
-    const sbtnCsvcDuyet = document.getElementById("sbtn-csvc-duyet");
+      if (!user) user = {};
 
-    // Debug kiểm tra xem có lấy được Element không (Có thể xóa sau khi chạy ngon)
-    if (!menuBanGiao) {
-      console.warn("⚠️ Không tìm thấy element có id='menu-ban-giao' trong HTML!");
-    }
+      const role = String(user.role || "").trim().toUpperCase();
+      const userType = String(user.userType || "").trim().toUpperCase();
 
-    // =========================================================================
-    // 🟢 QUY TẮC 1: TAB BÀN GIAO VÀ THU HỒI
-    // =========================================================================
-    if (menuBanGiao) {
-      if (IS_ADMIN || IS_CTV) {
-        menuBanGiao.classList.remove("hidden"); // ADMIN & CTV: Hiện Bàn giao
-        menuBanGiao.style.display = "";          // Đảm bảo không bị dính display: none trong CSS
+      // 1. Nhận diện Role
+      const IS_ADMIN = role.includes('ADMIN') || role.includes('QUẢN TRỊ') || role.includes('QTV');
+      const IS_EXTERNAL = !IS_ADMIN && (userType === 'EXTERNAL' || role.includes('DONVI') || role.includes('ĐƠN VỊ'));
+      const IS_CTV = !IS_ADMIN && !IS_EXTERNAL;
+
+      // 2. Lấy Elements
+      const menuBanGiao = document.getElementById("menu-ban-giao");
+      const sbtnProgress = document.getElementById("sbtn-ctv-progress");
+      const sbtnAdmin = document.getElementById("sbtn-ctv-admin");
+      const btnAddProgram = document.getElementById("btn-qtv-add-program");
+      const btnConfigSchedule = document.getElementById("btn-qtv-config-schedule");
+      const sbtnCsvcDuyet = document.getElementById("sbtn-csvc-duyet");
+
+      // 3. Phân quyền Bàn giao & Thu hồi
+      if (menuBanGiao) {
+        if (IS_ADMIN || IS_CTV) {
+          menuBanGiao.classList.remove("hidden");
+        } else {
+          menuBanGiao.classList.add("hidden");
+        }
+      }
+
+      // 4. Phân quyền chức năng Quản trị / CTV
+      if (IS_ADMIN) {
+        if (sbtnAdmin) sbtnAdmin.classList.remove("hidden");
+        if (btnConfigSchedule) btnConfigSchedule.classList.remove("hidden");
+        if (btnAddProgram) btnAddProgram.classList.remove("hidden");
+        if (sbtnCsvcDuyet) sbtnCsvcDuyet.classList.remove("hidden");
+        if (sbtnProgress) sbtnProgress.classList.add("hidden");
+      } else if (IS_CTV) {
+        if (sbtnAdmin) sbtnAdmin.classList.add("hidden");
+        if (btnConfigSchedule) btnConfigSchedule.classList.add("hidden");
+        if (btnAddProgram) btnAddProgram.classList.add("hidden");
+        if (sbtnCsvcDuyet) sbtnCsvcDuyet.classList.add("hidden");
+        if (sbtnProgress) sbtnProgress.classList.remove("hidden");
       } else {
-        menuBanGiao.classList.add("hidden");    // External: Ẩn Bàn giao
+        if (sbtnAdmin) sbtnAdmin.classList.add("hidden");
+        if (btnConfigSchedule) btnConfigSchedule.classList.add("hidden");
+        if (btnAddProgram) btnAddProgram.classList.add("hidden");
+        if (sbtnCsvcDuyet) sbtnCsvcDuyet.classList.add("hidden");
+        if (sbtnProgress) sbtnProgress.classList.add("hidden");
+      }
+
+      if (document.getElementById("header-user-zone")) {
+        document.getElementById("header-user-zone").classList.remove("hidden");
       }
     }
 
+    // Gán hàm vào window để auth.js gọi được
+    window.applyUserRolePermissions = applyUserRolePermissions;
+
     // =========================================================================
-    // 🟢 QUY TẮC 2: CÁC TÍNH NĂNG QUẢN TRỊ VÀ TÍNH NĂNG CTV
+    // 🟢 TỰ ĐỘNG KÍCH HOẠT PHÂN QUYỀN NGAY KHI VỪA MỞ TRANG
     // =========================================================================
-    if (IS_ADMIN) {
-      if (sbtnAdmin) sbtnAdmin.classList.remove("hidden");            // Xếp loại CTV
-      if (btnConfigSchedule) btnConfigSchedule.classList.remove("hidden"); // Mở thời gian đăng ký lịch trực
-      if (btnAddProgram) btnAddProgram.classList.remove("hidden");    // Tạo mới chương trình
-      if (sbtnCsvcDuyet) sbtnCsvcDuyet.classList.remove("hidden");    // Duyệt CSVC
-      if (sbtnProgress) sbtnProgress.classList.add("hidden");
-    } 
-    else if (IS_CTV) {
-      if (sbtnAdmin) sbtnAdmin.classList.add("hidden");             
-      if (btnConfigSchedule) btnConfigSchedule.classList.add("hidden"); 
-      if (btnAddProgram) btnAddProgram.classList.add("hidden");        
-      if (sbtnCsvcDuyet) sbtnCsvcDuyet.classList.add("hidden");     
-      if (sbtnProgress) sbtnProgress.classList.remove("hidden");    
-    } 
-    else { // EXTERNAL
-      if (sbtnAdmin) sbtnAdmin.classList.add("hidden");             
-      if (btnConfigSchedule) btnConfigSchedule.classList.add("hidden"); 
-      if (btnAddProgram) btnAddProgram.classList.add("hidden");        
-      if (sbtnCsvcDuyet) sbtnCsvcDuyet.classList.add("hidden");
-      if (sbtnProgress) sbtnProgress.classList.add("hidden");      
+    function initPermissionsWithRetry(attempts = 0) {
+      applyUserRolePermissions();
+
+      // Nếu chưa gán kịp window.currentUser, thử lại tối đa 5 lần (mỗi lần 50ms)
+      if ((!window.currentUser || !window.currentUser.role) && attempts < 5) {
+        setTimeout(() => initPermissionsWithRetry(attempts + 1), 50);
+      }
     }
 
-    if (window.currentUser && document.getElementById("header-user-zone")) {
-      document.getElementById("header-user-zone").classList.remove("hidden");
-    }
-  }
+    // Lắng nghe sự kiện chạy ngay từ đầu
+    document.addEventListener("DOMContentLoaded", initPermissionsWithRetry);
+    window.addEventListener("load", initPermissionsWithRetry);
 
-    // CHUYỂN TAB VÀ TẢI LỊCH SỬ CHUẨN KHÔNG BỊ LỖI
+    // Chuyển tab
     function switchTab(tabId) {
       if (window.innerWidth < 1024) document.getElementById("main-sidebar")?.classList.add("hidden");
 
@@ -1079,7 +1092,6 @@
         if (targetView) {
           targetView.classList.remove('hidden');
           
-          // SỬA LỖI TẢI LỊCH SỬ: Tự động tải lại lịch sử đơn tương ứng
           if (targetId === 'history') {
             if (typeof loadUserBorrowHistory === 'function') loadUserBorrowHistory();
             else if (typeof loadBorrowHistory === 'function') loadBorrowHistory();
@@ -1101,10 +1113,6 @@
         }
       }
     }
-
-    document.addEventListener("DOMContentLoaded", function() {
-      if (window.currentUser) applyUserRolePermissions();
-    });
 
     function openCreateProgramModal() { document.getElementById("modal-create-program")?.classList.remove("hidden"); }
     function closeCreateProgramModal() { document.getElementById("modal-create-program")?.classList.add("hidden"); }
