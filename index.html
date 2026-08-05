@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HỆ THỐNG ĐOÀN THANH NIÊN - HỘI SINH VIÊN ĐẠI HỌC Y DƯỢC TPHCM</title>
-  
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <!-- Tailwind CSS & FullCalendar CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
@@ -285,12 +285,22 @@
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                   <div>
-                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Dự kiến mượn *</label>
-                    <input type="datetime-local" id="borrow-start" onchange="loadInventoryItems()" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
+                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Ngày mượn *</label>
+                    <input type="date" id="borrow-start-date" onchange="validateBorrowDates()" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
                   </div>
                   <div>
-                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Dự kiến trả *</label>
-                    <input type="datetime-local" id="borrow-end" onchange="loadInventoryItems()" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
+                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Giờ mượn *</label>
+                    <input type="time" id="borrow-start-time" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Ngày trả *</label>
+                    <input type="date" id="borrow-end-date" onchange="validateBorrowDates()" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Giờ trả *</label>
+                    <input type="time" id="borrow-end-time" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
                   </div>
                 </div>
                 <div>
@@ -419,12 +429,22 @@
 
                 <div class="grid grid-cols-2 gap-2">
                   <div>
-                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Thời gian bắt đầu *</label>
-                    <input type="datetime-local" id="csvc-borrow-start" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
+                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Ngày bắt đầu *</label>
+                    <input type="date" id="csvc-start-date" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
                   </div>
                   <div>
-                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Thời gian kết thúc *</label>
-                    <input type="datetime-local" id="csvc-borrow-end" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
+                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Giờ bắt đầu *</label>
+                    <input type="time" id="csvc-start-time" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Ngày kết thúc *</label>
+                    <input type="date" id="csvc-end-date" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Giờ kết thúc *</label>
+                    <input type="time" id="csvc-end-time" class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
                   </div>
                 </div>
 

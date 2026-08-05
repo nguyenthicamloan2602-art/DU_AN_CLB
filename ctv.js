@@ -123,7 +123,7 @@ function updateCheckinStats(total, inNum, outNum) {
 window.loadQtvCheckinLogs = loadQtvCheckinLogs;
 window.updateCheckinStats = updateCheckinStats;
 
-// LỊCH TRỰC CỘNG TÁC VIÊN - VẼ KHỐI MÀU CAM RÕ NÉT LÊN LỊCH
+// LỊCH TRỰC CỘNG TÁC VIÊN - CẬP NHẬT MÀU NHẠT PASTEL VÀ HIỂN THỊ TÊN NGƯỜI ĐĂNG KÝ
 async function loadAllWeeklySchedules() {
   const calendarEl = document.getElementById('ctv-calendar-container');
   if (!calendarEl) return;
@@ -165,18 +165,16 @@ async function loadAllWeeklySchedules() {
         alert(`📋 THÔNG TIN CA TRỰC\n\n👤 Họ tên: ${p.hoTen} (@${p.username})\n⏰ Thời gian: ${p.timeDisplay}\n🔖 Vị trí: ${p.shiftId}\n📝 Ghi chú: ${p.ghiChu || 'Không có'}`);
       },
 
-      // 🎨 STYLE TRỰC TIẾP CHO KHỐI THẺ SỰ KIỆN MÀU CAM
+      // 🎨 CHUYỂN STYLE SANG MÀU XANH LÁ NHẠT PASTEL DỊU MẮT
       eventDidMount: function(info) {
-        info.el.style.backgroundColor = "#ea580c"; // Màu cam nổi bật
-        info.el.style.borderColor = "#c2410c";
-        info.el.style.color = "#ffffff";
-        info.el.style.borderRadius = "6px";
-        info.el.style.padding = "3px 6px";
-        info.el.style.fontSize = "11px";
-        info.el.style.fontWeight = "bold";
-        info.el.style.margin = "2px 0";
-        info.el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.15)";
-      }
+      info.el.style.backgroundColor = "#dcfce7"; // Nền nhạt
+      info.el.style.borderColor = "#bbf7d0";
+      info.el.style.color = "#15803d";            // 🟢 CHỮ ĐẬM TƯƠNG PHẢN CAO
+      info.el.style.borderRadius = "6px";
+      info.el.style.padding = "2px 6px";
+      info.el.style.fontSize = "11px";
+      info.el.style.fontWeight = "800";           // Ép chữ siêu đậm
+    }
     });
     ctvCalendar.render();
   }
@@ -203,23 +201,26 @@ async function loadAllWeeklySchedules() {
       allSchedulesData = result.data || [];
       ctvCalendar.removeAllEvents();
       
-      // TẠO KHỐI THẺ SỰ KIỆN NỔI BẬT LÊN LỊCH
+      // TẠO KHỐI THẺ SỰ KIỆN HIỂN THỊ TÊN NGƯỜI ĐĂNG KÝ
       allSchedulesData.forEach(item => {
         let cleanDate = String(item.dateStr || "").trim();
         if (cleanDate.includes('T')) cleanDate = cleanDate.split('T')[0];
 
-        // Đảm bảo có chuỗi giờ hợp lệ
         const startTimeStr = item.startTime ? String(item.startTime).trim() : "08:00";
         const endTimeStr = item.endTime ? String(item.endTime).trim() : "10:00";
+        const displayName = item.hoTen || item.username;
 
         if (cleanDate) {
           ctvCalendar.addEvent({
-            title: `👤 ${item.hoTen || item.username} (${item.shiftId || 'Ca trực'})`,
+            title: `👤 ${displayName}`,
             start: `${cleanDate}T${startTimeStr}:00`,
             end: `${cleanDate}T${endTimeStr}:00`,
+            backgroundColor: '#dcfce7', // Nền xanh lá nhạt Pastel
+            borderColor: '#bbf7d0',     // Viền xanh nhạt
+            textColor: '#15803d',       // 🟢 CHỮ MÀU XANH LÁ ĐẬM (BẮT MẮT, DỄ ĐỌC)
             extendedProps: { 
               username: item.username,
-              hoTen: item.hoTen || item.username,
+              hoTen: displayName,
               shiftId: item.shiftId,
               ghiChu: item.ghiChu,
               timeDisplay: `${startTimeStr} - ${endTimeStr}`
@@ -228,7 +229,7 @@ async function loadAllWeeklySchedules() {
         }
       });
 
-      ctvCalendar.render();
+            ctvCalendar.render();
     }
   } catch (err) {
     console.error("Lỗi tải lịch trực:", err);
@@ -584,7 +585,85 @@ async function onScanSuccess(decodedText, decodedResult) {
     msgEl.innerText = "❌ Lỗi kết nối mạng!";
   }
 }
+// 🟢 HÀM LẤY HOẶC TẠO MÃ ID THIẾT BỊ DUY NHẤT TRÊN BỘ NHỚ TRÌNH DUYỆT
+function getOrCreateDeviceId() {
+  let devId = localStorage.getItem("ump_device_id");
+  if (!devId) {
+    // Tạo ID dựa trên thông tin trình duyệt + thời gian ngẫu nhiên
+    const screenInfo = `${window.screen.width}x${window.screen.height}_${window.screen.colorDepth}`;
+    const navInfo = navigator.userAgent.replace(/[^a-zA-Z0-9]/g, "").substring(0, 30);
+    devId = "DEV_" + navInfo + "_" + screenInfo + "_" + Math.random().toString(36).substring(2, 7);
+    localStorage.setItem("ump_device_id", devId);
+  }
+  return devId;
+}
 
+// 🟢 XỬ LÝ KHI QUÉT MÃ QR THÀNH CÔNG
+async function onScanSuccess(decodedText, decodedResult) {
+  if (html5QrcodeScanner) {
+    html5QrcodeScanner.clear();
+  }
+
+  const user = window.currentUser;
+  if (!user) return alert("⚠️ Vui lòng đăng nhập lại!");
+
+  const typeRadio = document.querySelector('input[name="checkin_type"]:checked');
+  const type = typeRadio ? typeRadio.value : "IN";
+  
+  const msgEl = document.getElementById("checkin-result-msg");
+  if (msgEl) {
+    msgEl.className = "p-3 rounded-xl text-xs font-bold mt-3 bg-blue-100 text-blue-800";
+    msgEl.innerText = "⏳ Đang xác thực ID thiết bị và mạng WiFi...";
+  }
+
+  // 1. Lấy ID Thiết bị cố định
+  const deviceId = getOrCreateDeviceId();
+
+  // 2. Lấy IP Public đại diện cho Mạng WiFi
+  let wifiIP = "127.0.0.1";
+  try {
+    const ipRes = await fetch("https://api.ipify.org?format=json");
+    const ipData = await ipRes.json();
+    wifiIP = ipData.ip || "Unknown_IP";
+  } catch (e) {
+    console.warn("Không lấy được WiFi IP, dùng mặc định");
+  }
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "CHECKIN_CTV",
+        username: user.username,
+        deviceId: deviceId,
+        wifiIP: wifiIP,
+        type: type,
+        qrData: decodedText
+      })
+    });
+
+    const result = JSON.parse(await res.text());
+    
+    if (result.success) {
+      if (result.warning && result.warning.includes("CẢNH BÁO")) {
+        msgEl.className = "p-3 rounded-xl text-xs font-bold mt-3 bg-amber-100 text-amber-900 border border-amber-300";
+        msgEl.innerText = "⚠️ " + result.message;
+      } else {
+        msgEl.className = "p-3 rounded-xl text-xs font-bold mt-3 bg-emerald-100 text-emerald-800";
+        msgEl.innerText = "✅ " + result.message;
+      }
+    } else {
+      msgEl.className = "p-3 rounded-xl text-xs font-bold mt-3 bg-rose-100 text-rose-800";
+      msgEl.innerText = "❌ " + result.message;
+    }
+  } catch (e) {
+    if (msgEl) {
+      msgEl.className = "p-3 rounded-xl text-xs font-bold mt-3 bg-rose-100 text-rose-800";
+      msgEl.innerText = "❌ Lỗi kết nối máy chủ!";
+    }
+  }
+}
 function onScanFailure(error) {
   // Bỏ qua các lỗi đọc mờ (thư viện sẽ tự quét tiếp)
 }
